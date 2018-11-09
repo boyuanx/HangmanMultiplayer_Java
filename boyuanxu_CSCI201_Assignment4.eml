@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component inheritJdk="true">
+	<exclude-output/>
+	<contentEntry url="file://$MODULE_DIR$"/>
+	<levels>
+		<level name="gson-2.8.5" value="project"/>
+		<level name="mysql-connector-java-8.0.12" value="project"/>
+	</levels>
+</component>

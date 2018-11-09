@@ -1,0 +1,6 @@
+ServerHostname=localhost
+ServerPort=6789
+DBConnection=jdbc:mysql://localhost:3306/CSCI201_HangmanGame_bx
+DBUsername=root
+DBPassword=123123
+SecretWordFile=hangmanwords.txt
