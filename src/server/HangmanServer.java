@@ -5,11 +5,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Vector;
 
-public class HangmanServer {
+class HangmanServer {
 
 	private Vector<HangmanServerThread> serverThreads;
 	
-	public HangmanServer(int port) {
+	HangmanServer(int port) {
 		ServerSocket ss = null;
 		try {
 			ss = new ServerSocket(port);
@@ -32,10 +32,9 @@ public class HangmanServer {
 		}
 	}
 
-	public void broadcast(Message m, HangmanServerThread hst) {
+	void broadcast(Message m, HangmanServerThread hst) {
 		for (HangmanServerThread thread : serverThreads) {
 			if (m != null) {
-				// Print something
 				System.out.println(m.getMessage());
 				thread.sendMessage(m);
 			}

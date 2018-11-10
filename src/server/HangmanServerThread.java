@@ -1,5 +1,6 @@
 package server;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -11,7 +12,7 @@ public class HangmanServerThread extends Thread {
     private ObjectOutputStream oos;
     private HangmanServer hs;
 
-    public HangmanServerThread(Socket s, HangmanServer hs) {
+    HangmanServerThread(Socket s, HangmanServer hs) {
         try {
             ois = new ObjectInputStream(s.getInputStream());
             oos = new ObjectOutputStream(s.getOutputStream());
@@ -22,7 +23,7 @@ public class HangmanServerThread extends Thread {
         }
     }
 
-    public void sendMessage(Message m) {
+    void sendMessage(Message m) {
         try {
             oos.writeObject(m);
             oos.flush();
@@ -41,6 +42,8 @@ public class HangmanServerThread extends Thread {
                     System.out.println("NULL in HangmanServerThread:run()!");
                 }
             }
+        } catch (EOFException e) {
+            System.err.println("Client disconnected.");
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
