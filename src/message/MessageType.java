@@ -1,6 +1,7 @@
 package message;
 
 public enum MessageType {
+    HANDSHAKE("HANDSHAKE"),
     TEXT("TEXT"),
     NEWGAMECONFIG("NEWGAMECONFIG"),
     JOINGAMEINFO("JOINGAMEINFO");

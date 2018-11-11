@@ -1,6 +1,8 @@
 package server;
 
+import gameRoom.GameRoom;
 import message.Message;
+import message.MessageType;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -20,15 +22,38 @@ public class HangmanServerThread extends Thread {
             oos = new ObjectOutputStream(s.getOutputStream());
             this.hs = hs;
             this.start();
-            //establishHandShake();
+            establishHandShake();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    void establishHandShake() {
-        while (true) {
-
+    private void establishHandShake() {
+        try {
+            while (true) {
+                Message m = (Message)ois.readObject();
+                if (m.getMessageType() == MessageType.NEWGAMECONFIG) {
+                    GameRoom g = new GameRoom((String) m.getData("gameName"), (int) m.getData("gameSize"), m.getUsername(), this);
+                    GlobalServerThreads.gameRooms.add(g);
+                    break;
+                } else if (m.getMessageType() == MessageType.JOINGAMEINFO) {
+                    GameRoom g = null;
+                    for (GameRoom gg : GlobalServerThreads.gameRooms) {
+                        if (gg.getGameName().equalsIgnoreCase((String) m.getData("gameName"))) {
+                            g = gg;
+                            GlobalServerThreads.gameRooms.remove(gg);
+                            break;
+                        }
+                    }
+                    g.addClient(m.getUsername(), this);
+                    GlobalServerThreads.gameRooms.add(g);
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Handshake with incoming client has failed: " + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            System.err.println("Incoming client handshake corrupted: " + e.getMessage());
         }
     }
 

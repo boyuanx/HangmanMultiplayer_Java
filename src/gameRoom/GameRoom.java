@@ -58,4 +58,8 @@ public class GameRoom {
         clientThreads.remove(username);
         return true;
     }
+
+    public Map<String, HangmanServerThread> getClientThreads() {
+        return clientThreads;
+    }
 }
