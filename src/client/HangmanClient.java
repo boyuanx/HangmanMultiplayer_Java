@@ -1,8 +1,8 @@
 package client;
 
-import server.Message;
+import message.Message;
 import util.GlobalScanner;
-import util.jdbcUtil;
+import util.jdbc_server_client_Util;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -16,13 +16,24 @@ public class HangmanClient extends Thread {
     private ObjectOutputStream oos;
     private Socket s;
 
+    public void run() {
+        try {
+            while (true) {
+                Message m = (Message) ois.readObject();
+                System.out.println(m.getUsername() + ": " + m.getMessage());
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
     HangmanClient(String hostname, int port) {
         try {
             System.out.println("Trying to connect to server...");
             s = new Socket(hostname, port);
             System.out.println("Connected!");
 
-            username = jdbcUtil.userLogin();
+            username = jdbc_server_client_Util.userLogin();
             runListener();
         } catch (IOException e) {
             System.out.println("Unable to connect to server " + hostname + " on port " + port + ".");
@@ -55,14 +66,7 @@ public class HangmanClient extends Thread {
         }
     }
 
-    public void run() {
-        try {
-            while (true) {
-                Message m = (Message) ois.readObject();
-                System.out.println(m.getUsername() + ": " + m.getMessage());
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+    public void makeNewGame(String gameName, int gameSize) {
+
     }
 }

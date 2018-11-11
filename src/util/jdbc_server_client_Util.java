@@ -1,8 +1,9 @@
 package util;
 
 import java.sql.*;
+import java.util.InputMismatchException;
 
-public class jdbcUtil {
+public class jdbc_server_client_Util {
 
     private static Connection conn = null;
     private static String username = null;
@@ -24,7 +25,7 @@ public class jdbcUtil {
         } catch (SQLException e) {
             System.out.println("Unable to connect to database " + DBConnection + " with username " + DBUsername + " and password " + DBPassword + ".");
         }
-        jdbcUtil.conn = conn;
+        jdbc_server_client_Util.conn = conn;
     }
 
     public static String userLogin() {
@@ -37,20 +38,16 @@ public class jdbcUtil {
                 String password = GlobalScanner.getScanner().nextLine();
                 if (userAuth(username, password)) {
                     loginSuccessMessage();
-                    return jdbcUtil.username;
+                    return jdbc_server_client_Util.username;
                 } else {
                     if (makeAccountFromCredentials(username, password)) {
-                        return jdbcUtil.username;
+                        return jdbc_server_client_Util.username;
                     }
                 }
             } catch (WrongPasswordException e) {
                 System.out.println(e.getMessage());
             }
         }
-    }
-
-    private static void loginSuccessMessage() {
-        System.out.println("Great! You are now logged in as " + username +".");
     }
 
     private static boolean makeAccountFromCredentials(String username, String password) {
@@ -81,15 +78,15 @@ public class jdbcUtil {
             ps.setString(1, password);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                jdbcUtil.isAuthenticated = true;
-                jdbcUtil.username = rs.getString("username");
+                jdbc_server_client_Util.isAuthenticated = true;
+                jdbc_server_client_Util.username = rs.getString("username");
                 String userPassword = rs.getString("password");
                 if (!userPassword.equals(password)) {
                     throw new WrongPasswordException();
                 }
-                jdbcUtil.password = userPassword;
-                jdbcUtil.wins = rs.getInt("wins");
-                jdbcUtil.losses = rs.getInt("losses");
+                jdbc_server_client_Util.password = userPassword;
+                jdbc_server_client_Util.wins = rs.getInt("wins");
+                jdbc_server_client_Util.losses = rs.getInt("losses");
                 rs.close();
                 ps.close();
                 return true;
@@ -111,11 +108,11 @@ public class jdbcUtil {
             ps.execute();
             ps.close();
 
-            jdbcUtil.username = username;
-            jdbcUtil.password = password;
-            jdbcUtil.wins = 0;
-            jdbcUtil.losses = 0;
-            jdbcUtil.isAuthenticated = true;
+            jdbc_server_client_Util.username = username;
+            jdbc_server_client_Util.password = password;
+            jdbc_server_client_Util.wins = 0;
+            jdbc_server_client_Util.losses = 0;
+            jdbc_server_client_Util.isAuthenticated = true;
 
             return true;
         } catch (SQLException e) {
@@ -124,7 +121,61 @@ public class jdbcUtil {
         }
     }
 
+    private static void loginSuccessMessage() {
+        System.out.println("Great! You are now logged in as " + username +".");
+        System.out.println();
+        System.out.println(username + "'s Record");
+        System.out.println("--------------");
+        System.out.println("Wins - " + wins);
+        System.out.println("Losses - " + losses);
+        display_StartOrJoin();
+    }
+
+    private static void display_StartOrJoin() {
+        System.out.println();
+        System.out.println("    1) Start a Game");
+        System.out.println("    2) Join a Game");
+        System.out.println();
+        System.out.print("Would you like to start a game or join a game? ");
+        int i = getIntInput();
+        if (i == 1) {
+            startNewGame();
+        } else if (i == 2) {
+            joinGame();
+        } else {
+            System.out.println("Invalid selection!");
+            display_StartOrJoin();
+        }
+    }
+
+    private static void startNewGame() {
+        System.out.print("What is the name of the game? ");
+        String gameName = GlobalScanner.getScanner().nextLine();
+        System.out.println();
+        System.out.print("How many users will be playing (1-4)? ");
+        int gameSize = getIntInput();
+        System.out.println();
+        System.out.println("Waiting for " + String.valueOf(gameSize-1) + " users to join...");
+        System.out.println();
+        System.out.println();
+    }
+
+    private static void joinGame() {
+        System.out.print("What is the name of the game? ");
+        String gameName = GlobalScanner.getScanner().nextLine();
+    }
+
     private static boolean yesNoParser(String s) {
         return s.equalsIgnoreCase("yes");
+    }
+
+    private static int getIntInput() {
+        try {
+            int i = GlobalScanner.getScanner().nextInt();
+            GlobalScanner.getScanner().nextLine(); // To prevent Scanner from skipping
+            return i;
+        } catch (InputMismatchException e) {
+            return 0;
+        }
     }
 }

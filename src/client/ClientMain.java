@@ -12,6 +12,9 @@ public class ClientMain {
         try {
             map = configReader.promptUserForConfig();
             HangmanClient client = new HangmanClient(map.get("ServerHostname"), Integer.parseInt(map.get("ServerPort")));
+            // The above code will end at outputting wins and losses.
+
+
         } catch (NullPointerException e) {
             System.exit(69);
         }

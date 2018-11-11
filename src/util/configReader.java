@@ -77,7 +77,7 @@ public class configReader {
             System.out.println();
         }
 
-        jdbcUtil.connect(map.get("DBConnection"), map.get("DBUsername"), map.get("DBPassword"));
+        jdbc_server_client_Util.connect(map.get("DBConnection"), map.get("DBUsername"), map.get("DBPassword"));
 
         return map;
     }
