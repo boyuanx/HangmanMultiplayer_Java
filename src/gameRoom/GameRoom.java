@@ -1,19 +1,22 @@
 package gameRoom;
 
+import server.HangmanServerThread;
+
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 public class GameRoom {
 
     private String gameName;
     private int gameSize;
-    private Vector<String> clientList;
+    private Map<String, HangmanServerThread> clientThreads;
 
-    public GameRoom(String name, int size, String creator) {
+    public GameRoom(String name, int size, String creator, HangmanServerThread thread) {
         gameName = name;
         gameSize = size;
-        clientList = new Vector<>();
-        clientList.add(creator);
+        clientThreads = new HashMap<>();
+        clientThreads.put(creator, thread);
     }
 
     public String getGameName() {
@@ -33,22 +36,26 @@ public class GameRoom {
     }
 
     public boolean containsClient(String username) {
-        return clientList.contains(username);
+        return clientThreads.containsKey(username);
     }
 
-    public boolean addClient(String username) {
-        if (clientList.contains(username) || clientList.size() >= gameSize) {
+    public boolean containsClient(HangmanServerThread thread) {
+        return clientThreads.containsValue(thread);
+    }
+
+    public boolean addClient(String username, HangmanServerThread thread) {
+        if (clientThreads.containsKey(username) || clientThreads.size() >= gameSize) {
             return false;
         }
-        clientList.add(username);
+        clientThreads.put(username, thread);
         return true;
     }
 
     public boolean removeClient(String username) {
-        if (!clientList.contains(username)) {
+        if (!clientThreads.containsKey(username)) {
             return false;
         }
-        clientList.remove(username);
+        clientThreads.remove(username);
         return true;
     }
 }

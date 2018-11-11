@@ -20,8 +20,15 @@ public class HangmanServerThread extends Thread {
             oos = new ObjectOutputStream(s.getOutputStream());
             this.hs = hs;
             this.start();
+            //establishHandShake();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    void establishHandShake() {
+        while (true) {
+
         }
     }
 

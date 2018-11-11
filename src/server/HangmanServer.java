@@ -1,6 +1,8 @@
 package server;
 
+import gameRoom.GameRoom;
 import message.Message;
+import util.GlobalScanner;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -9,17 +11,18 @@ import java.util.Vector;
 
 class HangmanServer {
 
-	private Vector<HangmanServerThread> serverThreads;
+	//private Vector<HangmanServerThread> serverThreads;
+	//private Vector<GameRoom> gameRooms;
 	
 	HangmanServer(int port) {
 		ServerSocket ss = null;
 		try {
 			ss = new ServerSocket(port);
-			serverThreads = new Vector<>();
+			GlobalServerThreads.serverThreads = new Vector<>();
 			while (true) {
 				Socket s = ss.accept();
 				HangmanServerThread hst = new HangmanServerThread(s, this);
-				serverThreads.add(hst);
+				GlobalServerThreads.serverThreads.add(hst);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -35,7 +38,9 @@ class HangmanServer {
 	}
 
 	void broadcast(Message m, HangmanServerThread hst) {
-		for (HangmanServerThread thread : serverThreads) {
+
+
+		for (HangmanServerThread thread : GlobalServerThreads.serverThreads) {
 			if (m != null) {
 				System.out.println(m.getMessage());
 				thread.sendMessage(m);
