@@ -159,15 +159,7 @@ public class jdbc_server_client_Util {
         System.out.println();
         System.out.print("How many users will be playing (1-4)? ");
         int gameSize = getIntInput();
-        makeNewGame(gameName, gameSize);
-        System.out.println();
-        System.out.println("Waiting for " + String.valueOf(gameSize-1) + " users to join...");
-        System.out.println();
-        System.out.println();
-    }
 
-
-    private static void makeNewGame(String gameName, int gameSize) {
         try {
             Message m = new Message(username);
             m.setMessageType(MessageType.NEWGAMECONFIG);
@@ -178,11 +170,27 @@ public class jdbc_server_client_Util {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        System.out.println();
+        System.out.println("Waiting for " + String.valueOf(gameSize-1) + " users to join...");
+        System.out.println();
+        System.out.println();
     }
 
     private static void joinGame() {
         System.out.print("What is the name of the game? ");
         String gameName = GlobalScanner.getScanner().nextLine();
+
+        try {
+            Message m = new Message(username);
+            m.setMessageType(MessageType.JOINGAMEINFO);
+            m.putData("gameName", gameName);
+            GlobalSocket.oos.writeObject(m);
+            GlobalSocket.oos.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private static boolean yesNoParser(String s) {
