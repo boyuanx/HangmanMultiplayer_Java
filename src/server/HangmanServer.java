@@ -11,9 +11,6 @@ import java.util.Vector;
 
 class HangmanServer {
 
-	//private Vector<HangmanServerThread> serverThreads;
-	//private Vector<GameRoom> gameRooms;
-	
 	HangmanServer(int port) {
 		ServerSocket ss = null;
 		try {
@@ -23,7 +20,6 @@ class HangmanServer {
 			while (true) {
 				Socket s = ss.accept();
 				HangmanServerThread hst = new HangmanServerThread(s, this);
-				//GlobalServerThreads.serverThreads.add(hst);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -39,21 +35,11 @@ class HangmanServer {
 	}
 
 	void broadcast(Message m, HangmanServerThread hst) {
-
 		for (GameRoom g : GlobalServerThreads.gameRooms) {
 			if (g.containsClient(hst)) {
 				g.getClientThreads().forEach((k, v) -> v.sendMessage(m));
 			}
 		}
-
-		/*
-		for (HangmanServerThread thread : GlobalServerThreads.serverThreads) {
-			if (m != null) {
-				System.out.println(m.getMessage());
-				thread.sendMessage(m);
-			}
-		}
-		*/
 	}
 
 }

@@ -3,6 +3,7 @@ package util;
 import client.GlobalSocket;
 import message.Message;
 import message.MessageType;
+import server.GlobalServerThreads;
 
 import java.io.IOException;
 import java.sql.*;
@@ -33,14 +34,26 @@ public class jdbc_server_client_Util {
         jdbc_server_client_Util.conn = conn;
     }
 
-    public static String userLogin() {
+    public static void userLogin() {
         while (true) {
             try {
                 System.out.println();
                 System.out.print("Username: ");
                 String username = GlobalScanner.getScanner().nextLine();
+                jdbc_server_client_Util.username = username;
                 System.out.print("Password: ");
                 String password = GlobalScanner.getScanner().nextLine();
+                jdbc_server_client_Util.password = password;
+
+                Message m = new Message();
+                m.setMessageType(MessageType.AUTHENTICATION);
+                m.putData("username", username);
+                m.putData("password", password);
+
+                GlobalSocket.oos.writeObject(m);
+                GlobalSocket.oos.flush();
+
+                /*
                 if (userAuth(username, password)) {
                     loginSuccessMessage();
                     return jdbc_server_client_Util.username;
@@ -49,10 +62,15 @@ public class jdbc_server_client_Util {
                         return jdbc_server_client_Util.username;
                     }
                 }
-            } catch (WrongPasswordException e) {
+                */
+            } catch (IOException e) {
                 System.out.println(e.getMessage());
             }
         }
+    }
+
+    public static boolean makeAccountFromCredentials() {
+        return makeAccountFromCredentials(username, password);
     }
 
     private static boolean makeAccountFromCredentials(String username, String password) {
@@ -75,7 +93,7 @@ public class jdbc_server_client_Util {
         }
     }
 
-    private static boolean userAuth(String username, String password) throws WrongPasswordException {
+    public static boolean userAuth(String username, String password) throws WrongPasswordException {
         PreparedStatement ps;
         try {
             ps = conn.prepareStatement("SELECT * FROM Users WHERE username=?");
@@ -126,7 +144,7 @@ public class jdbc_server_client_Util {
         }
     }
 
-    private static void loginSuccessMessage() {
+    public static void loginSuccessMessage() {
         System.out.println();
         System.out.println("Great! You are now logged in as " + username +".");
         System.out.println();
@@ -136,6 +154,18 @@ public class jdbc_server_client_Util {
         System.out.println("Losses - " + losses);
         display_StartOrJoin();
     }
+
+    public static void otherUserJoinedMessage(String username, int wins, int losses) {
+        System.out.println();
+        System.out.println("User " + username + " is in the game.");
+        System.out.println();
+        System.out.println(username + "'s Record");
+        System.out.println("--------------");
+        System.out.println("Wins - " + wins);
+        System.out.println("Losses - " + losses);
+    }
+
+
 
     private static void display_StartOrJoin() {
         System.out.println();
@@ -208,5 +238,17 @@ public class jdbc_server_client_Util {
             GlobalScanner.getScanner().nextLine();
             return 0;
         }
+    }
+
+    public static String getUsername() {
+        return username;
+    }
+
+    public static int getWins() {
+        return wins;
+    }
+
+    public static int getLosses() {
+        return losses;
     }
 }

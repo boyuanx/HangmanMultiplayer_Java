@@ -3,11 +3,14 @@ package server;
 import gameRoom.GameRoom;
 import message.Message;
 import message.MessageType;
+import util.WrongPasswordException;
+import util.jdbc_server_client_Util;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.invoke.WrongMethodTypeException;
 import java.net.Socket;
 
 public class HangmanServerThread extends Thread {
@@ -21,14 +24,39 @@ public class HangmanServerThread extends Thread {
             ois = new ObjectInputStream(s.getInputStream());
             oos = new ObjectOutputStream(s.getOutputStream());
             this.hs = hs;
-            establishHandShake();
+            clientAuthentication();
+            waitForClientToJoinRoom();
             this.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void establishHandShake() {
+    private void clientAuthentication() {
+        Message response = new Message();
+        try {
+            Object o = ois.readObject();
+            Message m = (Message)o;
+            if (m.getMessageType() == MessageType.AUTHENTICATION) {
+                String username = (String)m.getData("username");
+                String password = (String)m.getData("password");
+                response.setMessageType(MessageType.AUTHENTICATION);
+                if (jdbc_server_client_Util.userAuth(username, password)) {
+                    System.out.println("User authenticated");
+                    response.putData("response", 1);
+                } else {
+                    response.putData("response", 0);
+                }
+            }
+        } catch (WrongPasswordException e) {
+            response.putData("response", -1);
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        sendMessage(response);
+    }
+
+    private void waitForClientToJoinRoom() {
         try {
             while (true) {
                 Object o = ois.readObject();
@@ -50,7 +78,7 @@ public class HangmanServerThread extends Thread {
                     GlobalServerThreads.gameRooms.add(g);
                     break;
                 } else {
-                    System.err.println("Excepted handshake, received " + m.getMessageType() + " instead.");
+                    System.err.println("Expected handshake, received " + m.getMessageType() + " instead.");
                 }
             }
         } catch (IOException e) {

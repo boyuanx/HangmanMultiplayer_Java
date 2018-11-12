@@ -3,6 +3,7 @@ package client;
 import message.Message;
 import message.MessageType;
 import util.GlobalScanner;
+import util.WrongPasswordException;
 import util.jdbc_server_client_Util;
 
 import java.io.IOException;
@@ -21,10 +22,29 @@ public class HangmanClient extends Thread {
         try {
             while (true) {
                 Message m = (Message) GlobalSocket.ois.readObject();
-                System.out.println(m.getUsername() + ": " + m.getMessage());
+                MessageType type = m.getMessageType();
+                if (type == MessageType.AUTHENTICATION) {
+                    int response = (int)m.getData("response");
+                    if (response == 1) {
+                        jdbc_server_client_Util.loginSuccessMessage();
+                        username = jdbc_server_client_Util.getUsername();
+                    } else if (response == 0) {
+                        throw new WrongPasswordException();
+                    } else if (response == -1) {
+                        if (jdbc_server_client_Util.makeAccountFromCredentials()) {
+                            username = jdbc_server_client_Util.getUsername();
+                        }
+                    }
+                }
+
+
+                System.out.println("DEBUG: " + m.getUsername() + ": " + m.getMessage());
             }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
+        } catch (WrongPasswordException e) {
+            e.getMessage();
+            jdbc_server_client_Util.userLogin();
         }
     }
 
@@ -33,9 +53,9 @@ public class HangmanClient extends Thread {
             System.out.print("Trying to connect to server...");
             GlobalSocket.s = new Socket(hostname, port);
             System.out.println("Connected!");
-            initMessageDaemon();
-            username = jdbc_server_client_Util.userLogin();
+            initObjectStreams();
             this.start();
+            jdbc_server_client_Util.userLogin();
             runListener();
         } catch (IOException e) {
             System.out.println("Unable to connect to server " + hostname + " on port " + port + ".");
@@ -56,7 +76,7 @@ public class HangmanClient extends Thread {
         }
     }
 
-    private void initMessageDaemon() throws IOException {
+    private void initObjectStreams() throws IOException {
         GlobalSocket.oos = new ObjectOutputStream(GlobalSocket.s.getOutputStream());
         GlobalSocket.ois = new ObjectInputStream(GlobalSocket.s.getInputStream());
     }

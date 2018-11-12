@@ -15,6 +15,8 @@ public class Message implements Serializable {
         this.username = username;
     }
 
+    public Message() { }
+
     public MessageType getMessageType() {
         return type;
     }
