@@ -30,7 +30,7 @@ public class HangmanClient extends Thread {
 
     HangmanClient(String hostname, int port) {
         try {
-            System.out.println("Trying to connect to server...");
+            System.out.print("Trying to connect to server...");
             GlobalSocket.s = new Socket(hostname, port);
             System.out.println("Connected!");
             initMessageDaemon();

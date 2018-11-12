@@ -36,9 +36,9 @@ public class jdbc_server_client_Util {
     public static String userLogin() {
         while (true) {
             try {
+                System.out.println();
                 System.out.print("Username: ");
                 String username = GlobalScanner.getScanner().nextLine();
-                System.out.println();
                 System.out.print("Password: ");
                 String password = GlobalScanner.getScanner().nextLine();
                 if (userAuth(username, password)) {
@@ -127,6 +127,7 @@ public class jdbc_server_client_Util {
     }
 
     private static void loginSuccessMessage() {
+        System.out.println();
         System.out.println("Great! You are now logged in as " + username +".");
         System.out.println();
         System.out.println(username + "'s Record");
@@ -143,6 +144,7 @@ public class jdbc_server_client_Util {
         System.out.println();
         System.out.print("Would you like to start a game or join a game? ");
         int i = getIntInput();
+        System.out.println();
         if (i == 1) {
             startNewGame();
         } else if (i == 2) {
@@ -203,6 +205,7 @@ public class jdbc_server_client_Util {
             GlobalScanner.getScanner().nextLine(); // To prevent Scanner from skipping
             return i;
         } catch (InputMismatchException e) {
+            GlobalScanner.getScanner().nextLine();
             return 0;
         }
     }
