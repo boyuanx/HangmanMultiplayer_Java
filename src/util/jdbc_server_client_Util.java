@@ -1,5 +1,10 @@
 package util;
 
+import client.GlobalSocket;
+import message.Message;
+import message.MessageType;
+
+import java.io.IOException;
 import java.sql.*;
 import java.util.InputMismatchException;
 
@@ -154,10 +159,25 @@ public class jdbc_server_client_Util {
         System.out.println();
         System.out.print("How many users will be playing (1-4)? ");
         int gameSize = getIntInput();
+        makeNewGame(gameName, gameSize);
         System.out.println();
         System.out.println("Waiting for " + String.valueOf(gameSize-1) + " users to join...");
         System.out.println();
         System.out.println();
+    }
+
+
+    private static void makeNewGame(String gameName, int gameSize) {
+        try {
+            Message m = new Message(username);
+            m.setMessageType(MessageType.NEWGAMECONFIG);
+            m.putData("gameName", gameName);
+            m.putData("gameSize", gameSize);
+            GlobalSocket.oos.writeObject(m);
+            GlobalSocket.oos.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void joinGame() {

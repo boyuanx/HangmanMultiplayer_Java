@@ -2,7 +2,6 @@ package server;
 
 import gameRoom.GameRoom;
 import message.Message;
-import util.GlobalScanner;
 
 import java.io.IOException;
 import java.net.ServerSocket;

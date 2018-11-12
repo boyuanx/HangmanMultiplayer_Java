@@ -21,8 +21,8 @@ public class HangmanServerThread extends Thread {
             ois = new ObjectInputStream(s.getInputStream());
             oos = new ObjectOutputStream(s.getOutputStream());
             this.hs = hs;
-            this.start();
             establishHandShake();
+            this.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -31,7 +31,8 @@ public class HangmanServerThread extends Thread {
     private void establishHandShake() {
         try {
             while (true) {
-                Message m = (Message)ois.readObject();
+                Object o = ois.readObject();
+                Message m = (Message)o;
                 if (m.getMessageType() == MessageType.NEWGAMECONFIG) {
                     GameRoom g = new GameRoom((String) m.getData("gameName"), (int) m.getData("gameSize"), m.getUsername(), this);
                     GlobalServerThreads.gameRooms.add(g);
@@ -48,6 +49,8 @@ public class HangmanServerThread extends Thread {
                     g.addClient(m.getUsername(), this);
                     GlobalServerThreads.gameRooms.add(g);
                     break;
+                } else {
+                    System.err.println("Excepted handshake, received " + m.getMessageType() + " instead.");
                 }
             }
         } catch (IOException e) {

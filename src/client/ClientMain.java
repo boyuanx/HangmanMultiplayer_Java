@@ -16,6 +16,7 @@ public class ClientMain {
 
 
         } catch (NullPointerException e) {
+            e.printStackTrace();
             System.exit(69);
         }
     }

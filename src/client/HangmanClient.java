@@ -13,14 +13,14 @@ import java.net.Socket;
 public class HangmanClient extends Thread {
 
     private String username;
-    private ObjectInputStream ois;
-    private ObjectOutputStream oos;
-    private Socket s;
+    //private ObjectInputStream ois;
+    //private ObjectOutputStream oos;
+    //private Socket s;
 
     public void run() {
         try {
             while (true) {
-                Message m = (Message) ois.readObject();
+                Message m = (Message) GlobalSocket.ois.readObject();
                 System.out.println(m.getUsername() + ": " + m.getMessage());
             }
         } catch (IOException | ClassNotFoundException e) {
@@ -31,27 +31,25 @@ public class HangmanClient extends Thread {
     HangmanClient(String hostname, int port) {
         try {
             System.out.println("Trying to connect to server...");
-            s = new Socket(hostname, port);
+            GlobalSocket.s = new Socket(hostname, port);
             System.out.println("Connected!");
-
-            username = jdbc_server_client_Util.userLogin();
             initMessageDaemon();
-
-
+            username = jdbc_server_client_Util.userLogin();
+            this.start();
             runListener();
         } catch (IOException e) {
             System.out.println("Unable to connect to server " + hostname + " on port " + port + ".");
             e.printStackTrace();
         }
         try {
-            if (s != null) {
-                s.close();
+            if (GlobalSocket.s != null) {
+                GlobalSocket.s.close();
             }
-            if (oos != null) {
-                oos.close();
+            if (GlobalSocket.oos != null) {
+                GlobalSocket.oos.close();
             }
-            if (ois != null) {
-                ois.close();
+            if (GlobalSocket.ois != null) {
+                GlobalSocket.ois.close();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -59,27 +57,18 @@ public class HangmanClient extends Thread {
     }
 
     private void initMessageDaemon() throws IOException {
-        oos = new ObjectOutputStream(s.getOutputStream());
-        ois = new ObjectInputStream(s.getInputStream());
-        this.start();
+        GlobalSocket.oos = new ObjectOutputStream(GlobalSocket.s.getOutputStream());
+        GlobalSocket.ois = new ObjectInputStream(GlobalSocket.s.getInputStream());
     }
 
-    public void makeNewGame(String gameName, int gameSize) throws IOException {
-        Message m = new Message(username);
-        m.setMessageType(MessageType.NEWGAMECONFIG);
-        m.putData("gameName", gameName);
-        m.putData("gameSize", gameSize);
-        oos.writeObject(m);
-        oos.flush();
-    }
 
     private void runListener() throws IOException {
         while (true) {
             String line = GlobalScanner.getScanner().nextLine();
             Message m = new Message(username);
             m.setMessage(line);
-            oos.writeObject(m);
-            oos.flush();
+            GlobalSocket.oos.writeObject(m);
+            GlobalSocket.oos.flush();
         }
     }
 
