@@ -53,18 +53,28 @@ public class jdbc_server_client_Util {
                 GlobalSocket.oos.writeObject(m);
                 GlobalSocket.oos.flush();
 
-                /*
-                if (userAuth(username, password)) {
-                    loginSuccessMessage();
-                    return jdbc_server_client_Util.username;
-                } else {
-                    if (makeAccountFromCredentials(username, password)) {
-                        return jdbc_server_client_Util.username;
-                    }
-                }
-                */
-            } catch (IOException e) {
+                getAuthResponse();
+                break;
+            } catch (IOException | ClassNotFoundException | WrongPasswordException e) {
                 System.out.println(e.getMessage());
+            }
+        }
+    }
+
+    private static void getAuthResponse() throws IOException, ClassNotFoundException, WrongPasswordException {
+        Message m = (Message) GlobalSocket.ois.readObject();
+        MessageType type = m.getMessageType();
+        if (type == MessageType.AUTHENTICATION) {
+            int response = (int)m.getData("response");
+            if (response == 1) {
+                jdbc_server_client_Util.loginSuccessMessage();
+                username = jdbc_server_client_Util.getUsername();
+            } else if (response == 0) {
+                throw new WrongPasswordException();
+            } else if (response == -1) {
+                if (jdbc_server_client_Util.makeAccountFromCredentials()) {
+                    username = jdbc_server_client_Util.getUsername();
+                }
             }
         }
     }
@@ -231,8 +241,8 @@ public class jdbc_server_client_Util {
 
     private static int getIntInput() {
         try {
-            int i = GlobalScanner.getScanner().nextInt();
-            GlobalScanner.getScanner().nextLine(); // To prevent Scanner from skipping
+            int i = Integer.parseInt(GlobalScanner.getScanner().nextLine());
+            //GlobalScanner.getScanner().nextLine(); // To prevent Scanner from skipping
             return i;
         } catch (InputMismatchException e) {
             GlobalScanner.getScanner().nextLine();

@@ -14,37 +14,18 @@ import java.net.Socket;
 public class HangmanClient extends Thread {
 
     private String username;
-    //private ObjectInputStream ois;
-    //private ObjectOutputStream oos;
-    //private Socket s;
 
     public void run() {
         try {
             while (true) {
                 Message m = (Message) GlobalSocket.ois.readObject();
                 MessageType type = m.getMessageType();
-                if (type == MessageType.AUTHENTICATION) {
-                    int response = (int)m.getData("response");
-                    if (response == 1) {
-                        jdbc_server_client_Util.loginSuccessMessage();
-                        username = jdbc_server_client_Util.getUsername();
-                    } else if (response == 0) {
-                        throw new WrongPasswordException();
-                    } else if (response == -1) {
-                        if (jdbc_server_client_Util.makeAccountFromCredentials()) {
-                            username = jdbc_server_client_Util.getUsername();
-                        }
-                    }
-                }
 
 
                 System.out.println("DEBUG: " + m.getUsername() + ": " + m.getMessage());
             }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
-        } catch (WrongPasswordException e) {
-            e.getMessage();
-            jdbc_server_client_Util.userLogin();
         }
     }
 
@@ -54,8 +35,9 @@ public class HangmanClient extends Thread {
             GlobalSocket.s = new Socket(hostname, port);
             System.out.println("Connected!");
             initObjectStreams();
-            this.start();
             jdbc_server_client_Util.userLogin();
+            username = jdbc_server_client_Util.getUsername();
+            this.start();
             runListener();
         } catch (IOException e) {
             System.out.println("Unable to connect to server " + hostname + " on port " + port + ".");
@@ -80,7 +62,6 @@ public class HangmanClient extends Thread {
         GlobalSocket.oos = new ObjectOutputStream(GlobalSocket.s.getOutputStream());
         GlobalSocket.ois = new ObjectInputStream(GlobalSocket.s.getInputStream());
     }
-
 
     private void runListener() throws IOException {
         while (true) {
