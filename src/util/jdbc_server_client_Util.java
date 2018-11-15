@@ -55,13 +55,13 @@ public class jdbc_server_client_Util {
 
                 getAuthResponse();
                 break;
-            } catch (IOException | ClassNotFoundException | WrongPasswordException e) {
-                System.out.println(e.getMessage());
+            } catch (IOException | ClassNotFoundException | WrongPasswordException | RefuseToCreateAccountEdgyException e) {
+                System.err.println(e.getMessage());
             }
         }
     }
 
-    private static void getAuthResponse() throws IOException, ClassNotFoundException, WrongPasswordException {
+    private static void getAuthResponse() throws IOException, ClassNotFoundException, WrongPasswordException, RefuseToCreateAccountEdgyException {
         Message m = (Message) GlobalSocket.ois.readObject();
         MessageType type = m.getMessageType();
         if (type == MessageType.AUTHENTICATION) {
@@ -74,6 +74,8 @@ public class jdbc_server_client_Util {
             } else if (response == -1) {
                 if (jdbc_server_client_Util.makeAccountFromCredentials()) {
                     username = jdbc_server_client_Util.getUsername();
+                } else {
+                    throw new RefuseToCreateAccountEdgyException();
                 }
             }
         }
@@ -108,7 +110,6 @@ public class jdbc_server_client_Util {
         try {
             ps = conn.prepareStatement("SELECT * FROM Users WHERE username=?");
             ps.setString(1, username);
-            ps.setString(1, password);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 jdbc_server_client_Util.isAuthenticated = true;
@@ -131,6 +132,36 @@ public class jdbc_server_client_Util {
     }
 
     private static boolean makeAccount(String username, String password) {
+        try {
+            Message m = new Message(username);
+            m.setMessageType(MessageType.MAKEACCOUNT);
+            m.putData("username", username);
+            m.putData("password", password);
+            GlobalSocket.oos.writeObject(m);
+            GlobalSocket.oos.flush();
+
+            Message r = (Message)GlobalSocket.ois.readObject();
+            if (r.getMessageType() == MessageType.MAKEACCOUNT) {
+                int response = (int)r.getData("response");
+                if (response == 1) {
+                    wins = (int)r.getData("wins");
+                    losses = (int)r.getData("losses");
+                    return true;
+                } else if (response == 0) {
+                    System.err.println("Error making an account. Please contact your server administrator.");
+                }
+            } else {
+                System.err.println("Expected a MAKEACCOUNT message but received " + r.getMessageType() + ".");
+            }
+        } catch (IOException e) {
+            System.err.println("Error sending request to make a new account.");
+        } catch (ClassNotFoundException e) {
+            System.err.println("Error receiving server response for making a new account. Possible stream corruption?");
+        }
+        return false;
+    }
+
+    public static boolean serverMakeAccount(String username, String password) {
         PreparedStatement ps;
         try {
             ps = conn.prepareStatement("INSERT INTO Users (username, password, wins, losses) VALUES (?, ?, ?, ?)");
@@ -174,8 +205,6 @@ public class jdbc_server_client_Util {
         System.out.println("Wins - " + wins);
         System.out.println("Losses - " + losses);
     }
-
-
 
     private static void display_StartOrJoin() {
         System.out.println();
@@ -233,6 +262,31 @@ public class jdbc_server_client_Util {
             e.printStackTrace();
         }
 
+    }
+
+    public static boolean getNewJoinGameResponse() {
+        try {
+            Message m = (Message) GlobalSocket.ois.readObject();
+            MessageType type = m.getMessageType();
+
+            if (type != MessageType.JOINGAMEINFO && type != MessageType.NEWGAMECONFIG) {
+                System.err.println("Wrong message type received from server. Actual type: " + type + ".");
+                return false;
+            }
+
+            int response = (int)m.getData("response");
+            if (response == 1) {
+                System.out.println(m.getData("message"));
+                return true;
+            } else {
+                System.err.println(m.getData("message"));
+                return false;
+            }
+
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     private static boolean yesNoParser(String s) {

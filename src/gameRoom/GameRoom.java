@@ -4,7 +4,6 @@ import server.HangmanServerThread;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Vector;
 
 public class GameRoom {
 
@@ -29,6 +28,15 @@ public class GameRoom {
 
     public int getGameSize() {
         return gameSize;
+    }
+
+    public String getRemainingCapacityMessage() {
+        int i = gameSize - clientThreads.size();
+        if (i == 0) {
+            return "All users have joined.";
+        } else {
+            return "Waiting for " + Integer.toString(i) + " other user(s) to join...";
+        }
     }
 
     public void setGameSize(int gameSize) {

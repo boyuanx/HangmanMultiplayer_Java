@@ -35,7 +35,8 @@ public class HangmanClient extends Thread {
             GlobalSocket.s = new Socket(hostname, port);
             System.out.println("Connected!");
             initObjectStreams();
-            jdbc_server_client_Util.userLogin();
+            jdbc_server_client_Util.userLogin();    // User login -> Send join game or new game messages
+
             username = jdbc_server_client_Util.getUsername();
             this.start();
             runListener();
