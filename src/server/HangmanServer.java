@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 class HangmanServer {
@@ -38,6 +39,19 @@ class HangmanServer {
 		for (GameRoom g : GlobalServerThreads.gameRooms) {
 			if (g.containsClient(hst)) {
 				g.getClientThreads().forEach((k, v) -> v.sendMessage(m));
+			}
+		}
+	}
+
+	void broadcastExcludeSelf(Message m, HangmanServerThread hst) {
+		for (GameRoom g : GlobalServerThreads.gameRooms) {
+			if (g.containsClient(hst)) {
+				Map<String, HangmanServerThread> map = g.getClientThreads();
+				for (HangmanServerThread thread : map.values()) {
+					if (!thread.equals(hst)) {
+						thread.sendMessage(m);
+					}
+				}
 			}
 		}
 	}

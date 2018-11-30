@@ -25,8 +25,12 @@ public enum MessageType {
 
     // Data keys for JOINGAMEINFO: String gameName
     // Server response for JOINGAMEINFO: int response, String message
-    // 1 == Success, 0 == Failure
+    // 1 = Success, 0 = Failure
     JOINGAMEINFO("JOINGAMEINFO"),
+
+    // Receive-only message type
+    // Data keys for OTHERPLAYERINFO: String username, String wins, String losses
+    OTHERPLAYERINFO("OTHERPLAYERINFO"),
 
     // Data keys for SERVERGAMERESPONSE: String secretWord, int guessesRemaining, int isPreviousGuessInSecretWord, String previousGuess
     SERVERGAMERESPONSE("SERVERRESPONSE"),

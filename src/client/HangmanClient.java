@@ -3,7 +3,6 @@ package client;
 import message.Message;
 import message.MessageType;
 import util.GlobalScanner;
-import util.WrongPasswordException;
 import util.jdbc_server_client_Util;
 
 import java.io.IOException;
@@ -20,9 +19,16 @@ public class HangmanClient extends Thread {
             while (true) {
                 Message m = (Message) GlobalSocket.ois.readObject();
                 MessageType type = m.getMessageType();
+                if (type == MessageType.OTHERPLAYERINFO) {
+                    String username = (String)m.getData("username");
+                    int wins = (int)m.getData("wins");
+                    int losses = (int)m.getData("losses");
+                    jdbc_server_client_Util.otherUserJoinedMessage(username, wins, losses);
+                }
 
-
-                System.out.println("DEBUG: " + m.getUsername() + ": " + m.getMessage());
+                else {
+                    System.out.println("DEBUG TEXT MESSAGE: " + m.getUsername() + ": " + m.getMessage());
+                }
             }
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -36,7 +42,6 @@ public class HangmanClient extends Thread {
             System.out.println("Connected!");
             initObjectStreams();
             jdbc_server_client_Util.userLogin();    // User login -> Send join game or new game messages
-
             username = jdbc_server_client_Util.getUsername();
             this.start();
             runListener();

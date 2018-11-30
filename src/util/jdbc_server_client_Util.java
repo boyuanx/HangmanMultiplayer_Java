@@ -7,7 +7,9 @@ import server.GlobalServerThreads;
 
 import java.io.IOException;
 import java.sql.*;
+import java.util.HashMap;
 import java.util.InputMismatchException;
+import java.util.Map;
 
 public class jdbc_server_client_Util {
 
@@ -81,7 +83,7 @@ public class jdbc_server_client_Util {
         }
     }
 
-    public static boolean makeAccountFromCredentials() {
+    private static boolean makeAccountFromCredentials() {
         return makeAccountFromCredentials(username, password);
     }
 
@@ -230,6 +232,13 @@ public class jdbc_server_client_Util {
         System.out.println();
         System.out.print("How many users will be playing (1-4)? ");
         int gameSize = getIntInput();
+        System.out.println();
+
+        if (gameSize < 1 || gameSize > 4) {
+            System.out.println("A game can only have between 1-4 players...");
+            System.out.println();
+            startNewGame();
+        }
 
         try {
             Message m = new Message(username);
@@ -238,12 +247,19 @@ public class jdbc_server_client_Util {
             m.putData("gameSize", gameSize);
             GlobalSocket.oos.writeObject(m);
             GlobalSocket.oos.flush();
-        } catch (IOException e) {
+
+            Message r = (Message)GlobalSocket.ois.readObject();
+            System.out.println(r.getData("message"));
+            int response = (int)r.getData("response");
+            if (response == 0) {
+                System.out.println();
+                startNewGame();
+            }
+
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
 
-        System.out.println();
-        System.out.println("Waiting for " + String.valueOf(gameSize-1) + " users to join...");
         System.out.println();
         System.out.println();
     }
@@ -289,15 +305,30 @@ public class jdbc_server_client_Util {
         return false;
     }
 
+    public static Map<String, Integer> retrieveUserInfo(String username) {
+        Map<String, Integer> map = new HashMap<>();
+        PreparedStatement ps;
+        try {
+            ps = conn.prepareStatement("SELECT * FROM Users WHERE username=?");
+            ps.setString(1, username);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                map.put("wins", rs.getInt("wins"));
+                map.put("losses", rs.getInt("losses"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return map;
+    }
+
     private static boolean yesNoParser(String s) {
         return s.equalsIgnoreCase("yes");
     }
 
     private static int getIntInput() {
         try {
-            int i = Integer.parseInt(GlobalScanner.getScanner().nextLine());
-            //GlobalScanner.getScanner().nextLine(); // To prevent Scanner from skipping
-            return i;
+            return Integer.parseInt(GlobalScanner.getScanner().nextLine());
         } catch (InputMismatchException e) {
             GlobalScanner.getScanner().nextLine();
             return 0;

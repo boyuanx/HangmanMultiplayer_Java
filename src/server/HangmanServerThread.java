@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.Map;
 
 public class HangmanServerThread extends Thread {
 
@@ -94,8 +95,16 @@ public class HangmanServerThread extends Thread {
                 Message m = (Message)o;
                 if (m.getMessageType() == MessageType.NEWGAMECONFIG) {
                     TimestampUtil.printMessage(m.getUsername() + " wants to start a game called " + m.getData("gameName") + ".");
-                    GameRoom g = new GameRoom((String) m.getData("gameName"), (int) m.getData("gameSize"), m.getUsername(), this);
-                    GlobalServerThreads.gameRooms.add(g);
+                    GameRoom g = GlobalServerThreads.addGameRoom(m, this);
+
+                    if (g == null) {
+                        Message r = new Message();
+                        r.setMessageType(MessageType.NEWGAMECONFIG);
+                        r.putData("response", 0);
+                        r.putData("message", m.getData("gameName") + " already exists.");
+                        sendMessage(r);
+                        break;
+                    }
 
                     Message r = new Message();
                     r.setMessageType(MessageType.NEWGAMECONFIG);
@@ -107,14 +116,7 @@ public class HangmanServerThread extends Thread {
                     break;
                 } else if (m.getMessageType() == MessageType.JOINGAMEINFO) {
                     TimestampUtil.printMessage(m.getUsername() + " wants to join a game called " + m.getData("gameName") + ".");
-                    GameRoom g = null;
-                    for (GameRoom gg : GlobalServerThreads.gameRooms) {
-                        if (gg.getGameName().equalsIgnoreCase((String) m.getData("gameName"))) {
-                            g = gg;
-                            GlobalServerThreads.gameRooms.remove(gg);
-                            break;
-                        }
-                    }
+                    GameRoom g = GlobalServerThreads.addGameRoom(m, this);
 
                     if (g == null) {
                         Message r = new Message();
@@ -133,6 +135,14 @@ public class HangmanServerThread extends Thread {
                     r.putData("response", 1);
                     r.putData("message", g.getRemainingCapacityMessage());
                     sendMessage(r);
+
+                    Message stats = new Message();
+                    stats.setMessageType(MessageType.OTHERPLAYERINFO);
+                    stats.putData("username", m.getUsername());
+                    Map<String, Integer> map = jdbc_server_client_Util.retrieveUserInfo(m.getUsername());
+                    stats.putData("wins", map.get("wins"));
+                    stats.putData("losses", map.get("losses"));
+                    hs.broadcastExcludeSelf(stats, this);
 
                     TimestampUtil.printMessage(m.getUsername() + " successfully joined game " + m.getData("gameName") + ".");
                     break;
