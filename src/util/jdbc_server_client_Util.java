@@ -18,7 +18,6 @@ public class jdbc_server_client_Util {
     private static String password = null;
     private static int wins = 0;
     private static int losses = 0;
-    private static boolean isAuthenticated = false;
 
     static void connect(String DBConnection, String DBUsername, String DBPassword) {
         Connection conn = null;
@@ -67,7 +66,7 @@ public class jdbc_server_client_Util {
         Message m = (Message) GlobalSocket.ois.readObject();
         MessageType type = m.getMessageType();
         if (type == MessageType.AUTHENTICATION) {
-            int response = (int)m.getData("response");
+            int response = (int) m.getData("response");
             if (response == 1) {
                 jdbc_server_client_Util.loginSuccessMessage();
                 username = jdbc_server_client_Util.getUsername();
@@ -79,6 +78,9 @@ public class jdbc_server_client_Util {
                 } else {
                     throw new RefuseToCreateAccountEdgyException();
                 }
+            } else if (response == -2) {
+                System.err.println(m.getData("message"));
+                userLogin();
             }
         }
     }
@@ -114,7 +116,6 @@ public class jdbc_server_client_Util {
             ps.setString(1, username);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                jdbc_server_client_Util.isAuthenticated = true;
                 jdbc_server_client_Util.username = rs.getString("username");
                 String userPassword = rs.getString("password");
                 if (!userPassword.equals(password)) {
@@ -178,7 +179,6 @@ public class jdbc_server_client_Util {
             jdbc_server_client_Util.password = password;
             jdbc_server_client_Util.wins = 0;
             jdbc_server_client_Util.losses = 0;
-            jdbc_server_client_Util.isAuthenticated = true;
 
             return true;
         } catch (SQLException e) {

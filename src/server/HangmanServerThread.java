@@ -34,17 +34,18 @@ public class HangmanServerThread extends Thread {
         }
     }
 
-    private void clientAuthentication() {
+    private void clientAuthentication() throws AlreadyLoggedInException {
         Message response = new Message();
         String tempU = null;
         try {
             Object o = ois.readObject();
             Message m = (Message)o;
             MessageType type = m.getMessageType();
+            String username = (String)m.getData("username");
+            GlobalServerThreads.addNewThread(username, this);
+
             if (type == MessageType.AUTHENTICATION) {
-                String username = (String)m.getData("username");
                 tempU = username;
-                this.username = username;
                 String password = (String)m.getData("password");
 
                 TimestampUtil.printMessage(username + " - trying to log in with password " + password + ".");
@@ -62,9 +63,7 @@ public class HangmanServerThread extends Thread {
                     clientAuthentication();
                 }
             } else if (type == MessageType.MAKEACCOUNT) {
-                String username = (String)m.getData("username");
                 tempU = username;
-                this.username = username;
                 String password = (String)m.getData("password");
                 response.setMessageType(MessageType.MAKEACCOUNT);
                 if (jdbc_server_client_Util.serverMakeAccount(username, password)) {
@@ -90,6 +89,19 @@ public class HangmanServerThread extends Thread {
             clientAuthentication();
         } catch (IOException | ClassNotFoundException e) {
             TimestampUtil.printMessage("Client disconnected.");
+        }
+    }
+
+    private void sendDeauthPacket() {
+        try {
+            Message m = new Message();
+            m.setMessageType(MessageType.AUTHENTICATION);
+            m.putData("response", -2);
+            m.putData("message", "Oops wait, but you already have an active session! Bye bye get kicked!");
+            oos.writeObject(m);
+            oos.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -146,15 +158,6 @@ public class HangmanServerThread extends Thread {
                         break;
                     }
 
-                    //g.addClient(m.getUsername(), this);
-                    //GlobalServerThreads.gameRooms.add(g);
-
-                    Message r = new Message();
-                    r.setMessageType(MessageType.JOINGAMEINFO);
-                    r.putData("response", 1);
-                    r.putData("message", g.getRemainingCapacityMessage());
-                    hs.broadcast(r, this);
-
                     Message stats = new Message();
                     stats.setMessageType(MessageType.OTHERPLAYERINFO);
                     stats.putData("username", m.getUsername());
@@ -162,6 +165,12 @@ public class HangmanServerThread extends Thread {
                     stats.putData("wins", map.get("wins"));
                     stats.putData("losses", map.get("losses"));
                     hs.broadcastExcludeSelf(stats, this);
+
+                    Message r = new Message();
+                    r.setMessageType(MessageType.JOINGAMEINFO);
+                    r.putData("response", 1);
+                    r.putData("message", g.getRemainingCapacityMessage());
+                    hs.broadcast(r, this);
 
                     TimestampUtil.printMessage(m.getUsername() + " - successfully joined game " + m.getData("gameName") + ".");
                     break;
@@ -188,7 +197,6 @@ public class HangmanServerThread extends Thread {
     public void run() {
         try {
             clientAuthentication();
-            GlobalServerThreads.addNewThread(username, this);
             waitForClientToJoinRoom();
             while (true) {
                 Message m = (Message)ois.readObject();
@@ -199,16 +207,15 @@ public class HangmanServerThread extends Thread {
                 }
             }
         } catch (EOFException e) {
-            System.err.println("Client disconnected.");
+            TimestampUtil.printMessage("Client disconnected.");
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         } catch (AlreadyLoggedInException e) {
-            System.err.println(e.getMessage());
-            System.err.println("AlreadyLoggedIn");
+            TimestampUtil.printMessage(e.getMessage());
+            sendDeauthPacket();
             interrupt();
         } finally {
             GlobalServerThreads.removeThread(username);
-            System.err.println("Removed");
         }
     }
 

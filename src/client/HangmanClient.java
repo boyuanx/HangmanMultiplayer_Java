@@ -26,6 +26,9 @@ public class HangmanClient extends Thread {
                     int wins = (int)m.getData("wins");
                     int losses = (int)m.getData("losses");
                     jdbc_server_client_Util.otherUserJoinedMessage(username, wins, losses);
+                } else if (type == MessageType.JOINGAMEINFO) {
+                    System.out.println();
+                    System.out.println(m.getData("message"));
                 }
 
                 else {
@@ -68,7 +71,6 @@ public class HangmanClient extends Thread {
 
     private void initObjectStreams() throws IOException {
         GlobalSocket.oos = new ObjectOutputStream(GlobalSocket.s.getOutputStream());
-        GlobalSocket.oos.flush();
         GlobalSocket.ois = new ObjectInputStream(GlobalSocket.s.getInputStream());
     }
 
