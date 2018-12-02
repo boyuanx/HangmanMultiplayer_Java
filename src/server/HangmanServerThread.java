@@ -36,9 +36,8 @@ public class HangmanServerThread extends Thread {
             e.printStackTrace();
         } catch (AlreadyLoggedInException e) {
             System.err.println(e.getMessage());
+            System.err.println("AlreadyLoggedIn");
             interrupt();
-        } finally {
-            GlobalServerThreads.removeThread(username);
         }
     }
 
@@ -207,6 +206,9 @@ public class HangmanServerThread extends Thread {
             System.err.println("Client disconnected.");
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
+        } finally {
+            GlobalServerThreads.removeThread(username);
+            System.err.println("Removed");
         }
     }
 
