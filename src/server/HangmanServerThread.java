@@ -28,16 +28,9 @@ public class HangmanServerThread extends Thread {
             ois = new ObjectInputStream(s.getInputStream());
             oos = new ObjectOutputStream(s.getOutputStream());
             this.hs = hs;
-            clientAuthentication();
-            GlobalServerThreads.addNewThread(username, this);
-            waitForClientToJoinRoom();
             this.start();
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (AlreadyLoggedInException e) {
-            System.err.println(e.getMessage());
-            System.err.println("AlreadyLoggedIn");
-            interrupt();
         }
     }
 
@@ -194,6 +187,9 @@ public class HangmanServerThread extends Thread {
 
     public void run() {
         try {
+            clientAuthentication();
+            GlobalServerThreads.addNewThread(username, this);
+            waitForClientToJoinRoom();
             while (true) {
                 Message m = (Message)ois.readObject();
                 if (m != null) {
@@ -206,6 +202,10 @@ public class HangmanServerThread extends Thread {
             System.err.println("Client disconnected.");
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
+        } catch (AlreadyLoggedInException e) {
+            System.err.println(e.getMessage());
+            System.err.println("AlreadyLoggedIn");
+            interrupt();
         } finally {
             GlobalServerThreads.removeThread(username);
             System.err.println("Removed");

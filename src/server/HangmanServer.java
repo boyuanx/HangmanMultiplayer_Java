@@ -18,9 +18,12 @@ class HangmanServer {
 			ss = new ServerSocket(port);
 			GlobalServerThreads.serverThreads = new HashMap<>();
 			GlobalServerThreads.gameRooms = new Vector<>();
+			System.err.println("Before loop");
 			while (true) {
 				Socket s = ss.accept();
+				System.err.println("New thread before");
 				HangmanServerThread hst = new HangmanServerThread(s, this);
+				System.err.println("New thread");
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
