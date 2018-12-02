@@ -52,7 +52,12 @@ public class GlobalServerThreads {
         boolean e = false;
         for (GameRoom g : gameRooms) {
             if (g.getGameName().equals(name)) {
-                e = true;
+                if (g.getClientThreads().isEmpty()) {
+                    gameRooms.remove(g);
+                } else {
+                    e = true;
+                }
+                break;
             }
         }
         return e;
@@ -65,6 +70,10 @@ public class GlobalServerThreads {
             }
         }
         return null;
+    }
+
+    public static void removeClientFromRooms(String username) {
+        gameRooms.forEach((v) -> v.removeClient(username));
     }
 
 }

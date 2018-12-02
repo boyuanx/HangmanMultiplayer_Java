@@ -180,10 +180,15 @@ public class HangmanServerThread extends Thread {
                 }
             }
         } catch (IOException e) {
-            System.err.println("Handshake with incoming client has failed: " + e.getMessage());
+            TimestampUtil.printMessage("Handshake with incoming client has failed: " + e.getMessage());
         } catch (ClassNotFoundException e) {
-            System.err.println("Incoming client handshake corrupted: " + e.getMessage());
+            TimestampUtil.printMessage("Incoming client handshake corrupted: " + e.getMessage());
         }
+    }
+
+    private void chooseSecretWord() {
+
+        SecretWordUtil.chooseSecretWord();
     }
 
     public void sendMessage(Message m) {
@@ -203,12 +208,10 @@ public class HangmanServerThread extends Thread {
                 Message m = (Message)ois.readObject();
                 if (m != null) {
                     hs.broadcast(m, this);
-                } else {
-                    System.out.println("NULL in HangmanServerThread:run()!");
                 }
             }
         } catch (EOFException e) {
-            TimestampUtil.printMessage("Client disconnected.");
+            TimestampUtil.printMessage(username + " - disconnected.");
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         } catch (AlreadyLoggedInException e) {
@@ -217,6 +220,7 @@ public class HangmanServerThread extends Thread {
             interrupt();
         } finally {
             GlobalServerThreads.removeThread(username);
+            GlobalServerThreads.removeClientFromRooms(username);
         }
     }
 

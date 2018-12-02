@@ -59,10 +59,6 @@ public class configReader {
                     map.put("ServerPort", prop.getProperty("ServerPort"));
                 } else throw new JMConfigException("ServerPort");
             }
-
-
-
-
         } catch (IOException | JMConfigException e) {
             System.out.println(e.getMessage());
             map = null;

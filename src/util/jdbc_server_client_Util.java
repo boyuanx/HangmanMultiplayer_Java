@@ -41,9 +41,17 @@ public class jdbc_server_client_Util {
                 System.out.println();
                 System.out.print("Username: ");
                 String username = GlobalScanner.getScanner().nextLine();
+                if (username.isEmpty()) {
+                    userLogin();
+                    return;
+                }
                 jdbc_server_client_Util.username = username;
                 System.out.print("Password: ");
                 String password = GlobalScanner.getScanner().nextLine();
+                if (password.isEmpty()) {
+                    userLogin();
+                    return;
+                }
                 jdbc_server_client_Util.password = password;
 
                 Message m = new Message();
@@ -276,6 +284,7 @@ public class jdbc_server_client_Util {
             GlobalSocket.oos.flush();
 
             Message r = (Message)GlobalSocket.ois.readObject();
+            System.out.println();
             System.out.println(r.getData("message"));
             int response = (int)r.getData("response");
             if (response == 0) {

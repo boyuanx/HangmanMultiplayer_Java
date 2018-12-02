@@ -10,7 +10,8 @@ public class ServerMain {
         Map<String, String> map;
         try {
             map = configReader.promptUserForConfig(true);
-            HangmanServer server = new HangmanServer(Integer.parseInt(map.get("ServerPort")));
+            SecretWordUtil.initWordList(map.get("SecretWordFile"));
+            new HangmanServer(Integer.parseInt(map.get("ServerPort")));
         } catch (NullPointerException e) {
             System.exit(69);
         }

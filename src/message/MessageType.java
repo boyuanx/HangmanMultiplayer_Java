@@ -32,8 +32,8 @@ public enum MessageType {
     // Data keys for OTHERPLAYERINFO: String username, String wins, String losses
     OTHERPLAYERINFO("OTHERPLAYERINFO"),
 
-    // Data keys for SERVERGAMERESPONSE: String secretWord, int guessesRemaining, int isPreviousGuessInSecretWord, String previousGuess
-    SERVERGAMERESPONSE("SERVERRESPONSE"),
+    // Data keys for SERVERGAMERESPONSE: String message, int guessesRemaining
+    SERVERGAMERESPONSE("SERVERGAMERESPONSE"),
 
     // Data keys for SERVEROTHERRESPONSE: String response
     SERVEROTHERRESPONSE("SERVEROTHERRESPONSE");

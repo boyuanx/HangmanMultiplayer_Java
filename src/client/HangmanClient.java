@@ -1,13 +1,11 @@
 package client;
 
-import jdk.nashorn.internal.objects.Global;
 import message.Message;
 import message.MessageType;
 import util.GlobalScanner;
 import util.jdbc_server_client_Util;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
