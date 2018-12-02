@@ -3,6 +3,7 @@ package server;
 import gameRoom.GameRoom;
 import message.Message;
 import message.MessageType;
+import util.AlreadyLoggedInException;
 import util.TimestampUtil;
 import util.WrongPasswordException;
 import util.jdbc_server_client_Util;
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.security.Timestamp;
 import java.util.Map;
 
 public class HangmanServerThread extends Thread {
@@ -19,6 +21,7 @@ public class HangmanServerThread extends Thread {
     private ObjectInputStream ois;
     private ObjectOutputStream oos;
     private HangmanServer hs;
+    private String username;
 
     HangmanServerThread(Socket s, HangmanServer hs) {
         try {
@@ -26,10 +29,16 @@ public class HangmanServerThread extends Thread {
             oos = new ObjectOutputStream(s.getOutputStream());
             this.hs = hs;
             clientAuthentication();
+            GlobalServerThreads.addNewThread(username, this);
             waitForClientToJoinRoom();
             this.start();
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (AlreadyLoggedInException e) {
+            System.err.println(e.getMessage());
+            interrupt();
+        } finally {
+            GlobalServerThreads.removeThread(username);
         }
     }
 
@@ -43,6 +52,7 @@ public class HangmanServerThread extends Thread {
             if (type == MessageType.AUTHENTICATION) {
                 String username = (String)m.getData("username");
                 tempU = username;
+                this.username = username;
                 String password = (String)m.getData("password");
 
                 TimestampUtil.printMessage(username + " - trying to log in with password " + password + ".");
@@ -50,6 +60,7 @@ public class HangmanServerThread extends Thread {
                 response.setMessageType(MessageType.AUTHENTICATION);
                 if (jdbc_server_client_Util.userAuth(username, password)) {
                     TimestampUtil.printMessage(username + " - successfully logged in.");
+                    TimestampUtil.printMessage(username + " - has record " + jdbc_server_client_Util.getWins() + " wins and " + jdbc_server_client_Util.getLosses() + " losses.");
                     response.putData("response", 1);
                     sendMessage(response);
                 } else {
@@ -61,6 +72,7 @@ public class HangmanServerThread extends Thread {
             } else if (type == MessageType.MAKEACCOUNT) {
                 String username = (String)m.getData("username");
                 tempU = username;
+                this.username = username;
                 String password = (String)m.getData("password");
                 response.setMessageType(MessageType.MAKEACCOUNT);
                 if (jdbc_server_client_Util.serverMakeAccount(username, password)) {
@@ -73,6 +85,7 @@ public class HangmanServerThread extends Thread {
                     response.putData("losses", jdbc_server_client_Util.getLosses());
                     sendMessage(response);
                 } else {
+                    this.username = username;
                     TimestampUtil.printMessage(username + " - failed to create a new account.");
                     response.putData("response", 0);
                     sendMessage(response);
@@ -84,7 +97,7 @@ public class HangmanServerThread extends Thread {
             sendMessage(response);
             clientAuthentication();
         } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            TimestampUtil.printMessage("Client disconnected.");
         }
     }
 
@@ -94,10 +107,11 @@ public class HangmanServerThread extends Thread {
                 Object o = ois.readObject();
                 Message m = (Message)o;
                 if (m.getMessageType() == MessageType.NEWGAMECONFIG) {
-                    TimestampUtil.printMessage(m.getUsername() + " wants to start a game called " + m.getData("gameName") + ".");
+                    TimestampUtil.printMessage(m.getUsername() + " - wants to start a game called " + m.getData("gameName") + ".");
                     GameRoom g = GlobalServerThreads.addGameRoom(m, this);
 
                     if (g == null) {
+                        TimestampUtil.printMessage(m.getUsername() + " - " + m.getData("gameName") + " already exists, so unable to start " + m.getData("gameName") + ".");
                         Message r = new Message();
                         r.setMessageType(MessageType.NEWGAMECONFIG);
                         r.putData("response", 0);
@@ -105,20 +119,20 @@ public class HangmanServerThread extends Thread {
                         sendMessage(r);
                         break;
                     }
-
                     Message r = new Message();
                     r.setMessageType(MessageType.NEWGAMECONFIG);
                     r.putData("response", 1);
                     r.putData("message", g.getRemainingCapacityMessage());
                     sendMessage(r);
 
-                    TimestampUtil.printMessage(m.getUsername() + " successfully started game " + m.getData("gameName") + ".");
+                    TimestampUtil.printMessage(m.getUsername() + " - successfully started game " + m.getData("gameName") + ".");
                     break;
                 } else if (m.getMessageType() == MessageType.JOINGAMEINFO) {
-                    TimestampUtil.printMessage(m.getUsername() + " wants to join a game called " + m.getData("gameName") + ".");
-                    GameRoom g = GlobalServerThreads.addGameRoom(m, this);
+                    TimestampUtil.printMessage(m.getUsername() + " - wants to join a game called " + m.getData("gameName") + ".");
 
-                    if (g == null) {
+                    // Game not found
+                    if (!GlobalServerThreads.doesGameRoomExist((String) m.getData("gameName"))) {
+                        TimestampUtil.printMessage(m.getUsername() + " - failed to join a non-existent game. FOOL!");
                         Message r = new Message();
                         r.setMessageType(MessageType.JOINGAMEINFO);
                         r.putData("response", 0);
@@ -127,14 +141,27 @@ public class HangmanServerThread extends Thread {
                         break;
                     }
 
-                    g.addClient(m.getUsername(), this);
-                    GlobalServerThreads.gameRooms.add(g);
+                    GameRoom g = GlobalServerThreads.addGameRoom(m, this);
+
+                    // Game found but full
+                    if (g == null) {
+                        TimestampUtil.printMessage(m.getUsername() + " - " + m.getData("gameName") + " exists, but " + m.getUsername() + " is unable to join because the game is full.");
+                        Message r = new Message();
+                        r.setMessageType(MessageType.JOINGAMEINFO);
+                        r.putData("response", 0);
+                        r.putData("message", "Failed to join game: the game is full.");
+                        sendMessage(r);
+                        break;
+                    }
+
+                    //g.addClient(m.getUsername(), this);
+                    //GlobalServerThreads.gameRooms.add(g);
 
                     Message r = new Message();
                     r.setMessageType(MessageType.JOINGAMEINFO);
                     r.putData("response", 1);
                     r.putData("message", g.getRemainingCapacityMessage());
-                    sendMessage(r);
+                    hs.broadcast(r, this);
 
                     Message stats = new Message();
                     stats.setMessageType(MessageType.OTHERPLAYERINFO);
@@ -144,7 +171,7 @@ public class HangmanServerThread extends Thread {
                     stats.putData("losses", map.get("losses"));
                     hs.broadcastExcludeSelf(stats, this);
 
-                    TimestampUtil.printMessage(m.getUsername() + " successfully joined game " + m.getData("gameName") + ".");
+                    TimestampUtil.printMessage(m.getUsername() + " - successfully joined game " + m.getData("gameName") + ".");
                     break;
                 } else {
                     System.err.println("Expected handshake, received " + m.getMessageType() + " instead.");
@@ -157,7 +184,7 @@ public class HangmanServerThread extends Thread {
         }
     }
 
-    void sendMessage(Message m) {
+    public void sendMessage(Message m) {
         try {
             oos.writeObject(m);
             oos.flush();

@@ -1,5 +1,6 @@
 package gameRoom;
 
+import message.Message;
 import server.HangmanServerThread;
 
 import java.util.HashMap;
@@ -28,6 +29,10 @@ public class GameRoom {
 
     public int getGameSize() {
         return gameSize;
+    }
+
+    public boolean isFull() {
+        return gameSize < clientThreads.size();
     }
 
     public String getRemainingCapacityMessage() {
@@ -70,4 +75,5 @@ public class GameRoom {
     public Map<String, HangmanServerThread> getClientThreads() {
         return clientThreads;
     }
+
 }

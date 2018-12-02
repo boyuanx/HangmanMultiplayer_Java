@@ -274,7 +274,15 @@ public class jdbc_server_client_Util {
             m.putData("gameName", gameName);
             GlobalSocket.oos.writeObject(m);
             GlobalSocket.oos.flush();
-        } catch (IOException e) {
+
+            Message r = (Message)GlobalSocket.ois.readObject();
+            System.out.println(r.getData("message"));
+            int response = (int)r.getData("response");
+            if (response == 0) {
+                System.out.println();
+                joinGame();
+            }
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
 

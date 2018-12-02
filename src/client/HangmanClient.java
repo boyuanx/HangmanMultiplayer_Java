@@ -27,7 +27,7 @@ public class HangmanClient extends Thread {
                 }
 
                 else {
-                    System.out.println("DEBUG TEXT MESSAGE: " + m.getUsername() + ": " + m.getMessage());
+                    System.out.println("DEBUG TEXT MESSAGE: " + m.getMessageType() + m.getUsername() + ": " + m.getMessage());
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
