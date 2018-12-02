@@ -80,7 +80,7 @@ public class jdbc_server_client_Util {
                 }
             } else if (response == -2) {
                 System.err.println(m.getData("message"));
-                userLogin();
+                System.exit(7);
             }
         }
     }

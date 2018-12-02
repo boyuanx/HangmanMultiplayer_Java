@@ -42,6 +42,7 @@ public class HangmanServerThread extends Thread {
             Message m = (Message)o;
             MessageType type = m.getMessageType();
             String username = (String)m.getData("username");
+            this.username = username;
             GlobalServerThreads.addNewThread(username, this);
 
             if (type == MessageType.AUTHENTICATION) {
@@ -97,7 +98,7 @@ public class HangmanServerThread extends Thread {
             Message m = new Message();
             m.setMessageType(MessageType.AUTHENTICATION);
             m.putData("response", -2);
-            m.putData("message", "Oops wait, but you already have an active session! Bye bye get kicked!");
+            m.putData("message", "Oops, it looks like you already have an active session! Bye bye get kicked!");
             oos.writeObject(m);
             oos.flush();
         } catch (IOException e) {
