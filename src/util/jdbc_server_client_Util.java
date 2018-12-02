@@ -142,6 +142,37 @@ public class jdbc_server_client_Util {
         return false;
     }
 
+    public static void updateWinLoss(String username, boolean didWin) {
+        PreparedStatement ps;
+        PreparedStatement ps2;
+        int wins;
+        int losses;
+        try {
+            ps = conn.prepareStatement("SELECT * FROM Users WHERE username=?");
+            ps.setString(1, username);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                wins = rs.getInt("wins");
+                losses = rs.getInt("losses");
+                rs.close();
+                ps.close();
+                ps2 = conn.prepareStatement("UPDATE Users SET wins = ?, losses = ? WHERE username = ?");
+                if (didWin) {
+                    ps2.setInt(1, wins+1);
+                    ps2.setInt(2, losses);
+                } else {
+                    ps2.setInt(1, wins);
+                    ps2.setInt(2, losses+1);
+                }
+                ps2.setString(3, username);
+                ps2.executeUpdate();
+                ps2.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     private static boolean makeAccount(String username, String password) {
         try {
             Message m = new Message(username);
@@ -199,11 +230,16 @@ public class jdbc_server_client_Util {
         System.out.println();
         System.out.println("Great! You are now logged in as " + username +".");
         System.out.println();
+        displayStats(username, wins, losses);
+        display_StartOrJoin();
+    }
+
+    public static void displayStats(String username, int wins, int losses) {
+        System.out.println();
         System.out.println(username + "'s Record");
         System.out.println("--------------");
         System.out.println("Wins - " + wins);
         System.out.println("Losses - " + losses);
-        display_StartOrJoin();
     }
 
     public static void otherUserJoinedMessage(String username, int wins, int losses) {
@@ -320,6 +356,37 @@ public class jdbc_server_client_Util {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public static String promptUserToGuess() {
+        System.out.println();
+        System.out.println("    1) Guess a letter.");
+        System.out.println("    2) Guess the word.");
+        System.out.println();
+        System.out.print("What would you like to do? ");
+        int input = getIntInput();
+        System.out.println();
+        if (input == 1) {
+            System.out.println("Letter to guess - ");
+        } else if (input == 2) {
+            System.out.println("What is the secret word? ");
+        } else {
+            return null;
+        }
+        return GlobalScanner.getScanner().nextLine();
+    }
+
+    public static void sendGuessToServer(String s) {
+        Message m = new Message();
+        m.setMessageType(MessageType.CLIENTGAMERESPONSE);
+        m.setUsername(username);
+        m.putData("guess", s);
+        if (s.length() == 1) {
+            m.putData("isLetterGuess", 1);
+        } else {
+            m.putData("isLetterGuess", 0);
+        }
+        GlobalSocket.sendMessage(m);
     }
 
     public static Map<String, Integer> retrieveUserInfo(String username) {

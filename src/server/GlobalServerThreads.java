@@ -4,7 +4,9 @@ import gameRoom.GameRoom;
 import message.Message;
 import message.MessageType;
 import util.AlreadyLoggedInException;
+import util.TimestampUtil;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Vector;
 
@@ -48,7 +50,7 @@ public class GlobalServerThreads {
         return null;
     }
 
-    public static boolean doesGameRoomExist(String name) {
+    static boolean doesGameRoomExist(String name) {
         boolean e = false;
         for (GameRoom g : gameRooms) {
             if (g.getGameName().equals(name)) {
@@ -63,7 +65,7 @@ public class GlobalServerThreads {
         return e;
     }
 
-    private static GameRoom findGameRoom(String gameName) {
+    static GameRoom findGameRoom(String gameName) {
         for (GameRoom g : gameRooms) {
             if (g.getGameName().equals(gameName)) {
                 return g;
@@ -72,7 +74,40 @@ public class GlobalServerThreads {
         return null;
     }
 
-    public static void removeClientFromRooms(String username) {
+    static GameRoom findGameRoom(HangmanServerThread hst) {
+        for (GameRoom g : gameRooms) {
+            if (g.containsClient(hst)) {
+                return g;
+            }
+        }
+        return null;
+    }
+
+    static void setSecretWordForRoom(String s, HangmanServerThread hst) {
+        GameRoom g = findGameRoom(hst);
+        if (g.secretWord != null) {
+            TimestampUtil.printMessage(hst.username + " - Secret word has already been set!");
+            return;
+        }
+        gameRooms.remove(g);
+        g.setSecretWord(s);
+        gameRooms.add(g);
+    }
+
+    static boolean checkIfLetterInWordForRoom(String s, HangmanServerThread hst) {
+        GameRoom g = findGameRoom(hst);
+        gameRooms.remove(g);
+        boolean result = g.isLetterInWord(s);
+        gameRooms.add(g);
+        return result;
+    }
+
+    static boolean checkWordGuessForRoom(String s, HangmanServerThread hst) {
+        GameRoom g = findGameRoom(hst);
+        return g.secretWord.equalsIgnoreCase(s);
+    }
+
+    static void removeClientFromRooms(String username) {
         gameRooms.forEach((v) -> v.removeClient(username));
     }
 

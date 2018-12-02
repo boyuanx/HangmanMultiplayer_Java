@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.security.Timestamp;
 import java.util.Map;
 
 public class HangmanServerThread extends Thread {
@@ -21,7 +20,7 @@ public class HangmanServerThread extends Thread {
     private ObjectInputStream ois;
     private ObjectOutputStream oos;
     private HangmanServer hs;
-    private String username;
+    public String username;
 
     HangmanServerThread(Socket s, HangmanServer hs) {
         try {
@@ -171,7 +170,7 @@ public class HangmanServerThread extends Thread {
                     r.setMessageType(MessageType.JOINGAMEINFO);
                     r.putData("response", 1);
                     r.putData("message", g.getRemainingCapacityMessage());
-                    hs.broadcast(r, this);
+                    hs.broadcastGameRoom(r, this);
 
                     TimestampUtil.printMessage(m.getUsername() + " - successfully joined game " + m.getData("gameName") + ".");
                     break;
@@ -186,9 +185,68 @@ public class HangmanServerThread extends Thread {
         }
     }
 
-    private void chooseSecretWord() {
+    private void chooseNewSecretWord() {
+        Message m = new Message();
+        m.setMessageType(MessageType.SERVERGAMERESPONSE);
+        m.putData("response", 0);
+        m.putData("message", "Determining secret word...");
+        hs.broadcastGameRoom(m, this);
 
-        SecretWordUtil.chooseSecretWord();
+        String secretWord = SecretWordUtil.chooseSecretWord();
+        GlobalServerThreads.setSecretWordForRoom(secretWord, this);
+        String secretMessage = "Secret Word";
+        for (char c : secretWord.toCharArray()) {
+            secretMessage += " _";
+        }
+
+        Message n = new Message();
+        n.setMessageType(MessageType.SERVERGAMERESPONSE);
+        n.putData("response", 1);
+        n.putData("message", secretMessage);
+        n.putData("guessesRemaining", 7);
+        hs.broadcastGameRoom(n, this);
+
+        String currentUser = hs.getCurrentUserInRoom(this);
+        if (currentUser.equals(username)) {
+            Message go = new Message();
+            go.setMessageType(MessageType.WAIT);
+            go.putData("shouldWait", 0);
+            hs.broadcastToCurrentUserAndIncrementIndex(go, this);
+        } else {
+            Message wait = new Message();
+            wait.setMessageType(MessageType.WAIT);
+            wait.putData("shouldWait", 1);
+            wait.putData("waitingForUser", currentUser);
+            sendMessage(wait);
+        }
+    }
+
+    private void broadcastWordAndWait(boolean init) {
+
+    }
+
+    private void processClientGuess(Message m) {
+        if (m.getMessageType() == MessageType.CLIENTGAMERESPONSE) {
+            int isLetterGuess = (int)m.getData("isLetterGuess");
+            String guess = (String)m.getData("guess");
+            boolean result;
+            if (isLetterGuess == 0) {
+                result = GlobalServerThreads.checkWordGuessForRoom(guess, this);
+                if (result) {
+                    GameRoom g = GlobalServerThreads.findGameRoom(this);
+                    for (String username : g.getClientThreads().keySet()) {
+                        if (username != this.username) {
+                            jdbc_server_client_Util.updateWinLoss(username, false);
+                        } else {
+                            jdbc_server_client_Util.updateWinLoss(this.username, true);
+                        }
+                    }
+                }
+            } else {
+                result = GlobalServerThreads.checkIfLetterInWordForRoom(guess, this);
+            }
+
+        }
     }
 
     public void sendMessage(Message m) {
@@ -204,11 +262,15 @@ public class HangmanServerThread extends Thread {
         try {
             clientAuthentication();
             waitForClientToJoinRoom();
+            chooseNewSecretWord();
             while (true) {
                 Message m = (Message)ois.readObject();
+                processClientGuess(m);
+                /*
                 if (m != null) {
-                    hs.broadcast(m, this);
+                    hs.broadcastGameRoom(m, this);
                 }
+                */
             }
         } catch (EOFException e) {
             TimestampUtil.printMessage(username + " - disconnected.");

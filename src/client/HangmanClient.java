@@ -27,10 +27,29 @@ public class HangmanClient extends Thread {
                 } else if (type == MessageType.JOINGAMEINFO) {
                     System.out.println();
                     System.out.println(m.getData("message"));
+                } else if (type == MessageType.SERVERGAMERESPONSE) {
+                    int response = (int)m.getData("response");
+                    if (response == 0) {
+                        System.out.println();
+                        System.out.println(m.getData("message"));
+                    } else if (response == 1) {
+                        System.out.println();
+                        System.out.println(m.getData("message"));
+                        System.out.println("You have " + m.getData("guessesRemaining") + " incorrect guesses remaining.");
+                    }
+                } else if (type == MessageType.WAIT) {
+                    int shouldWait = (int)m.getData("shouldWait");
+                    if (shouldWait == 0) {
+                        String guess = jdbc_server_client_Util.promptUserToGuess();
+                        jdbc_server_client_Util.sendGuessToServer(guess);
+                    } else {
+                        System.out.println("Waiting for " + m.getData("waitingForUser") + " to do something...");
+                        System.out.println();
+                    }
                 }
 
                 else {
-                    System.out.println("DEBUG TEXT MESSAGE: " + m.getMessageType() + m.getUsername() + ": " + m.getMessage());
+                    System.err.println("Undefined type " + m.getMessageType() + ": " + m.getUsername() + ": " + m.getMessage());
                 }
             }
         } catch (IOException | ClassNotFoundException e) {

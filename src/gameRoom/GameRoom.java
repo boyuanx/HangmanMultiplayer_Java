@@ -1,21 +1,25 @@
 package gameRoom;
 
-import message.Message;
 import server.HangmanServerThread;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.stream.Stream;
 
 public class GameRoom {
 
     private String gameName;
     private int gameSize;
-    private Map<String, HangmanServerThread> clientThreads;
+    private LinkedHashMap<String, HangmanServerThread> clientThreads;
+    public int currentBroadcastIndex = 0;
+    public int guessesLeft = 7;
+    public String secretWord;
+    public String secretWordMutable;
 
     public GameRoom(String name, int size, String creator, HangmanServerThread thread) {
         gameName = name;
         gameSize = size;
-        clientThreads = new HashMap<>();
+        clientThreads = new LinkedHashMap<>();
         clientThreads.put(creator, thread);
     }
 
@@ -72,8 +76,23 @@ public class GameRoom {
         return true;
     }
 
-    public Map<String, HangmanServerThread> getClientThreads() {
+    public LinkedHashMap<String, HangmanServerThread> getClientThreads() {
         return clientThreads;
+    }
+
+    public void setSecretWord(String s) {
+        if (secretWord == null) {
+            secretWord = s;
+            secretWordMutable = s;
+        }
+    }
+
+    public boolean isLetterInWord(String s) {
+        boolean result = secretWordMutable.contains(s);
+        if (result) {
+            secretWordMutable = secretWordMutable.replaceFirst(s, "");
+        }
+        return result;
     }
 
 }

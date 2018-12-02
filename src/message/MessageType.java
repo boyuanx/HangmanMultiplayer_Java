@@ -12,12 +12,6 @@ public enum MessageType {
     // If response == 1: String username, String password
     MAKEACCOUNT("MAKEACCOUNT"),
 
-    // Data keys for LETTERGUESS: String letter
-    LETTERGUESS("LETTERGUESS"),
-
-    // Data keys for WORDGUESS: String word
-    WORDGUESS("WORDGUESS"),
-
     // Data keys for NEWGAMECONFIG: String gameName, int gameSize
     // Server response for NEWGAMECONFIG: int response, String message
     // 1 = Success, 0 = Failure
@@ -32,11 +26,21 @@ public enum MessageType {
     // Data keys for OTHERPLAYERINFO: String username, String wins, String losses
     OTHERPLAYERINFO("OTHERPLAYERINFO"),
 
-    // Data keys for SERVERGAMERESPONSE: String message, int guessesRemaining
+    // Data keys for SERVERGAMERESPONSE: int response, String message, int guessesRemaining
+    // 0 = Determining secret word, 1 = Word printout + guesses remaining
     SERVERGAMERESPONSE("SERVERGAMERESPONSE"),
 
-    // Data keys for SERVEROTHERRESPONSE: String response
-    SERVEROTHERRESPONSE("SERVEROTHERRESPONSE");
+    // Data keys for WAIT: int shouldWait, String waitingForUser
+    WAIT("WAIT"),
+
+    // Data keys for CLIENTGAMERESPONSE: int isLetterGuess, String guess
+    CLIENTGAMERESPONSE("CLIENTGAMERESPONSE"),
+
+    // Data keys for SERVEROTHERRESPONSE: String message
+    SERVEROTHERRESPONSE("SERVEROTHERRESPONSE"),
+
+    // Server-side kill switch for client: String message
+    KILL("KILL");
 
     private final String text;
 
