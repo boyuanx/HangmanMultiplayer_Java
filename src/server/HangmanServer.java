@@ -3,6 +3,7 @@ package server;
 import gameRoom.GameRoom;
 import message.Message;
 import message.MessageType;
+import util.TimestampUtil;
 import util.jdbc_server_client_Util;
 
 import java.io.IOException;
@@ -36,11 +37,13 @@ class HangmanServer {
 		}
 	}
 
-	void tryStartAllThreadsInRoom(GameRoom g) {
+	void tryStartAllThreadsInRoom(GameRoom g, HangmanServerThread hst) {
 		if (g.isFull()) {
 			for (HangmanServerThread thread : g.getClientThreads().values()) {
 				thread.start();
 			}
+		} else {
+			TimestampUtil.printMessage(hst.username + " - " + g.getGameName() + " needs " + g.getGameSize() + " to start game.");
 		}
 	}
 

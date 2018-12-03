@@ -88,7 +88,7 @@ public class GameRoom {
     public boolean isLetterInWord(String s) {
         boolean result = secretWordMutable.contains(s);
         if (result) {
-            secretWordMutable = secretWordMutable.replaceFirst(s, "~");
+            secretWordMutable = secretWordMutable.replace(s, "~");
         } else {
             guessesLeft--;
         }

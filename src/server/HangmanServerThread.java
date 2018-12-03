@@ -14,6 +14,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Vector;
@@ -25,6 +26,7 @@ public class HangmanServerThread extends Thread {
     private HangmanServer hs;
     public String username;
     private boolean isHost = false;
+    private boolean lastGuessSuccess = false;
 
     HangmanServerThread(Socket s, HangmanServer hs) {
         try {
@@ -141,9 +143,9 @@ public class HangmanServerThread extends Thread {
                     r.putData("message", g.getRemainingCapacityMessage());
                     sendMessage(r);
 
-                    TimestampUtil.printMessage(m.getUsername() + " - successfully started game " + m.getData("gameName") + ".");
+                    TimestampUtil.printMessage(m.getUsername() + " - successfully created game " + m.getData("gameName") + ".");
                     isHost = true;
-                    hs.tryStartAllThreadsInRoom(g);
+                    hs.tryStartAllThreadsInRoom(g, this);
                     break;
                 } else if (m.getMessageType() == MessageType.JOINGAMEINFO) {
                     TimestampUtil.printMessage(m.getUsername() + " - wants to join a game called " + m.getData("gameName") + ".");
@@ -163,7 +165,7 @@ public class HangmanServerThread extends Thread {
 
                     // Game found but full
                     if (g == null) {
-                        TimestampUtil.printMessage(m.getUsername() + " - " + m.getData("gameName") + " exists, but " + m.getUsername() + " is unable to join because the game is full.");
+                        TimestampUtil.printMessage(m.getUsername() + " - " + m.getData("gameName") + " exists, but " + m.getUsername() + " is unable to join because the maximum number of players have already joined " + m.getData("gameName") + ".");
                         Message r = new Message();
                         r.setMessageType(MessageType.JOINGAMEINFO);
                         r.putData("response", 0);
@@ -187,7 +189,7 @@ public class HangmanServerThread extends Thread {
                     hs.broadcastGameRoom(r, this);
 
                     TimestampUtil.printMessage(m.getUsername() + " - successfully joined game " + m.getData("gameName") + ".");
-                    hs.tryStartAllThreadsInRoom(g);
+                    hs.tryStartAllThreadsInRoom(g, this);
                     break;
                 } else {
                     System.err.println("Expected handshake, received " + m.getMessageType() + " instead.");
@@ -212,7 +214,8 @@ public class HangmanServerThread extends Thread {
         hs.broadcastGameRoom(m, this);
 
         String secretWord = SecretWordUtil.chooseSecretWord();
-        System.err.println(secretWord);
+        GameRoom g = GlobalServerThreads.findGameRoom(this);
+        TimestampUtil.printMessage(username + " - " + g.getGameName() + " has " + g.getGameSize() + " players so starting game. Secret word is " + secretWord + ".");
         GlobalServerThreads.setSecretWordForRoom(secretWord, this);
         String secretMessage = "Secret Word";
         for (char c : secretWord.toCharArray()) {
@@ -253,6 +256,13 @@ public class HangmanServerThread extends Thread {
         }
 
         GameRoom g = GlobalServerThreads.findGameRoom(this);
+
+        if (lastGuessSuccess) {
+            TimestampUtil.printMessage(g.getGameName() + " " + username + " - " + secretMessage + ".");
+        } else {
+            TimestampUtil.printMessage(g.getGameName() + " now has " + g.guessesLeft + " guesses remaining.");
+        }
+
         Message n = new Message();
         n.setMessageType(MessageType.SERVERGAMERESPONSE);
         n.putData("response", 1);
@@ -281,8 +291,10 @@ public class HangmanServerThread extends Thread {
             GameRoom g = GlobalServerThreads.findGameRoom(this);
             boolean result;
             if (isLetterGuess == 0) {
+                TimestampUtil.printMessage(g.getGameName() + " " + username + " - guessed word " + guess + ".");
                 result = GlobalServerThreads.checkWordGuessForRoom(guess, this);
                 if (result) {
+                    TimestampUtil.printMessage(g.getGameName() + " " + username + " - " + guess + " is correct. " + username + " wins the game.");
                     for (String username : g.getClientThreads().keySet()) {
                         if (username.equals(this.username)) {
                             jdbc_server_client_Util.updateWinLoss(this.username, true);
@@ -292,6 +304,7 @@ public class HangmanServerThread extends Thread {
                     }
                     hs.broadcastWinLossKillToRoom(this);
                 } else {
+                    TimestampUtil.printMessage(g.getGameName() + " " + username + " - " + guess + " is not correct. " + username + " has lost and is no longer in the game.");
                     for (String username : g.getClientThreads().keySet()) {
                         if (username.equals(this.username)) {
                             hs.broadcastDisconnectToUser(this);
@@ -302,6 +315,7 @@ public class HangmanServerThread extends Thread {
                     g.guessesLeft--;
                 }
             } else {
+                TimestampUtil.printMessage(g.getGameName() + " " + username + " - guessed letter " + guess + ".");
                 // Tommy has guessed letter 'a'.
                 Message k = new Message();
                 k.setMessageType(MessageType.SERVEROTHERRESPONSE);
@@ -310,10 +324,12 @@ public class HangmanServerThread extends Thread {
 
                 result = GlobalServerThreads.checkIfLetterInWordForRoom(guess, this);
                 if (result) {
+                    lastGuessSuccess = true;
                     Message t = new Message();
                     t.setMessageType(MessageType.SERVEROTHERRESPONSE);
                     t.putData("message", "The letter '" + guess + "' is in the secret word.");
                     hs.broadcastGameRoom(t, this);
+                    TimestampUtil.printMessage(g.getGameName() + " " + username + " - " + guess + " is in the secret word.");
                 } else {
                     Message t = new Message();
                     t.setMessageType(MessageType.SERVEROTHERRESPONSE);
