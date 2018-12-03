@@ -89,6 +89,8 @@ public class GameRoom {
         boolean result = secretWordMutable.contains(s);
         if (result) {
             secretWordMutable = secretWordMutable.replaceFirst(s, "~");
+        } else {
+            guessesLeft--;
         }
         return result;
     }

@@ -246,17 +246,18 @@ public class HangmanServerThread extends Thread {
 
         for (int i = 0; i < secretWord.length(); i++) {
             if (secretWordMutable.charAt(i) == '~') {
-                secretMessage += secretWord.charAt(i);
+                secretMessage += " " + String.valueOf(secretWord.charAt(i));
             } else {
                 secretMessage += " _";
             }
         }
 
+        GameRoom g = GlobalServerThreads.findGameRoom(this);
         Message n = new Message();
         n.setMessageType(MessageType.SERVERGAMERESPONSE);
         n.putData("response", 1);
         n.putData("message", secretMessage);
-        n.putData("guessesRemaining", 7);
+        n.putData("guessesRemaining", g.guessesLeft);
         hs.broadcastGameRoom(n, this);
 
         String currentUser = hs.getCurrentUserInRoom(this);
@@ -275,6 +276,7 @@ public class HangmanServerThread extends Thread {
     private void processClientGuess(Message m) {
         if (m.getMessageType() == MessageType.CLIENTGAMERESPONSE) {
             int isLetterGuess = (int)m.getData("isLetterGuess");
+            String guessSender = m.getUsername();
             String guess = (String)m.getData("guess");
             GameRoom g = GlobalServerThreads.findGameRoom(this);
             boolean result;
@@ -300,11 +302,23 @@ public class HangmanServerThread extends Thread {
                     g.guessesLeft--;
                 }
             } else {
+                // Tommy has guessed letter 'a'.
+                Message k = new Message();
+                k.setMessageType(MessageType.SERVEROTHERRESPONSE);
+                k.putData("message", guessSender + " has guessed letter " + guess + ".");
+                hs.broadcastExcludeUser(k, guessSender, this);
+
                 result = GlobalServerThreads.checkIfLetterInWordForRoom(guess, this);
                 if (result) {
-
+                    Message t = new Message();
+                    t.setMessageType(MessageType.SERVEROTHERRESPONSE);
+                    t.putData("message", "The letter '" + guess + "' is in the secret word.");
+                    hs.broadcastGameRoom(t, this);
                 } else {
-
+                    Message t = new Message();
+                    t.setMessageType(MessageType.SERVEROTHERRESPONSE);
+                    t.putData("message", "The letter '" + guess + "' is not in the secret word.");
+                    hs.broadcastGameRoom(t, this);
                 }
             }
 

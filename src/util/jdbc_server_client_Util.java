@@ -390,9 +390,9 @@ public class jdbc_server_client_Util {
         int input = getIntInput();
         System.out.println();
         if (input == 1) {
-            System.out.println("Letter to guess - ");
+            System.out.print("Letter to guess - ");
         } else if (input == 2) {
-            System.out.println("What is the secret word? ");
+            System.out.print("What is the secret word? ");
         } else {
             return null;
         }
