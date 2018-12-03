@@ -142,6 +142,27 @@ public class jdbc_server_client_Util {
         return false;
     }
 
+    public static Map<String, String> getStats(String username) {
+        PreparedStatement ps;
+        Map<String, String> result = new HashMap<>();
+        try {
+            ps = conn.prepareStatement("SELECT * FROM Users WHERE username=?");
+            ps.setString(1, username);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                int wins = rs.getInt("wins");
+                int losses = rs.getInt("losses");
+                result.put("wins", Integer.toString(wins));
+                result.put("losses", Integer.toString(losses));
+                rs.close();
+                ps.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
     public static void updateWinLoss(String username, boolean didWin) {
         PreparedStatement ps;
         PreparedStatement ps2;
@@ -414,7 +435,6 @@ public class jdbc_server_client_Util {
         try {
             return Integer.parseInt(GlobalScanner.getScanner().nextLine());
         } catch (InputMismatchException e) {
-            GlobalScanner.getScanner().nextLine();
             return 0;
         }
     }

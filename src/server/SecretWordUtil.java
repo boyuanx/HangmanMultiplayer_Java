@@ -14,7 +14,7 @@ public class SecretWordUtil {
 
     public static void initWordList(String name) {
         setFileName(name);
-        readSecretWordFile();
+        wordList = readSecretWordFile();
     }
 
     private static void setFileName(String name) {

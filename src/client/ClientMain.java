@@ -13,7 +13,7 @@ public class ClientMain {
         while (true) {
             try {
                 map = configReader.promptUserForConfig(false);
-                HangmanClient client = new HangmanClient(map.get("ServerHostname"), Integer.parseInt(map.get("ServerPort")));
+                new HangmanClient(map.get("ServerHostname"), Integer.parseInt(map.get("ServerPort")));
             } catch (NullPointerException e) {
                 e.printStackTrace();
             }

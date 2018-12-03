@@ -37,7 +37,11 @@ public enum MessageType {
     CLIENTGAMERESPONSE("CLIENTGAMERESPONSE"),
 
     // Data keys for SERVEROTHERRESPONSE: String message
+    // Just print the message client-side
     SERVEROTHERRESPONSE("SERVEROTHERRESPONSE"),
+
+    // Data keys(csv) for WINSLOSSES: String usernames, String wins, String losses
+    WINSLOSSES("WINSLOSSES"),
 
     // Server-side kill switch for client: String message
     KILL("KILL");

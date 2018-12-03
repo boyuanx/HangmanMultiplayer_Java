@@ -2,15 +2,13 @@ package gameRoom;
 
 import server.HangmanServerThread;
 
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.stream.Stream;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GameRoom {
 
     private String gameName;
     private int gameSize;
-    private LinkedHashMap<String, HangmanServerThread> clientThreads;
+    private ConcurrentHashMap<String, HangmanServerThread> clientThreads;
     public int currentBroadcastIndex = 0;
     public int guessesLeft = 7;
     public String secretWord;
@@ -19,7 +17,7 @@ public class GameRoom {
     public GameRoom(String name, int size, String creator, HangmanServerThread thread) {
         gameName = name;
         gameSize = size;
-        clientThreads = new LinkedHashMap<>();
+        clientThreads = new ConcurrentHashMap<>();
         clientThreads.put(creator, thread);
     }
 
@@ -36,7 +34,7 @@ public class GameRoom {
     }
 
     public boolean isFull() {
-        return gameSize < clientThreads.size();
+        return gameSize <= clientThreads.size();
     }
 
     public String getRemainingCapacityMessage() {
@@ -76,7 +74,7 @@ public class GameRoom {
         return true;
     }
 
-    public LinkedHashMap<String, HangmanServerThread> getClientThreads() {
+    public ConcurrentHashMap<String, HangmanServerThread> getClientThreads() {
         return clientThreads;
     }
 
