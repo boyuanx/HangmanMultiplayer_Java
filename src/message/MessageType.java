@@ -2,7 +2,7 @@ package message;
 
 public enum MessageType {
     // Data keys for AUTHENTICATION: String username, String password
-    // Server response for AUTHENTICATION: int response
+    // Server response for AUTHENTICATION: int response, int wins, int losses
     // int 1 == Success, int 0 == Wrong password, int -1 == No account exists
     AUTHENTICATION("AUTHENTICATION"),
 

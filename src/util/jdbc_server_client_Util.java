@@ -76,6 +76,8 @@ public class jdbc_server_client_Util {
         if (type == MessageType.AUTHENTICATION) {
             int response = (int) m.getData("response");
             if (response == 1) {
+                wins = (int)m.getData("wins");
+                losses = (int)m.getData("losses");
                 jdbc_server_client_Util.loginSuccessMessage();
                 username = jdbc_server_client_Util.getUsername();
             } else if (response == 0) {

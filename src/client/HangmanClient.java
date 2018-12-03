@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.List;
 
 public class HangmanClient extends Thread {
 
@@ -67,8 +69,6 @@ public class HangmanClient extends Thread {
             initObjectStreams();
             jdbc_server_client_Util.userLogin();    // User login -> Send join game or new game messages
             username = jdbc_server_client_Util.getUsername();
-            //this.start();
-            //runListener();
             while (true) {
                 Message m = (Message) GlobalSocket.ois.readObject();
                 MessageType type = m.getMessageType();
@@ -104,9 +104,19 @@ public class HangmanClient extends Thread {
                     System.out.println();
                     System.out.println(m.getData("message"));
                 } else if (type == MessageType.WINSLOSSES) {
-
+                    String usernamesCSV = (String)m.getData("usernames");
+                    String winsCSV = (String)m.getData("wins");
+                    String lossesCSV = (String)m.getData("losses");
+                    List<String> usernames = Arrays.asList(usernamesCSV.split("\\s*,\\s*"));
+                    List<String> wins = Arrays.asList(winsCSV.split("\\s*,\\s*"));
+                    List<String> losses = Arrays.asList(lossesCSV.split("\\s*,\\s*"));
+                    for (int i = 0; i < usernames.size(); i++) {
+                        jdbc_server_client_Util.displayStats(usernames.get(i), Integer.parseInt(wins.get(i)), Integer.parseInt(losses.get(i)));
+                    }
                 } else if (type == MessageType.KILL) {
-
+                    System.out.println();
+                    System.out.println(m.getData("message"));
+                    System.exit(0);
                 }
 
                 else {

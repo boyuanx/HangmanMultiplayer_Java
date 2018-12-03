@@ -39,7 +39,7 @@ class HangmanServer {
 	void tryStartAllThreadsInRoom(GameRoom g) {
 		if (g.isFull()) {
 			for (HangmanServerThread thread : g.getClientThreads().values()) {
-				thread.startGame();
+				thread.start();
 			}
 		}
 	}
@@ -175,7 +175,40 @@ class HangmanServer {
 		GameRoom g = GlobalServerThreads.findGameRoom(hst);
 		Message lose = new Message();
 		lose.setMessageType(MessageType.SERVEROTHERRESPONSE);
-		lose.putData("message", "That is incorrect! You lose!/nThe word was " + g.secretWord + ".");
+		lose.putData("message", "That is incorrect! You lose!\nThe word was " + g.secretWord + ".");
+		hst.sendMessage(lose);
+
+		String usernames = "";
+		String wins = "";
+		String losses = "";
+		Map<String, String> map;
+		for (String s: g.getClientThreads().keySet()) {
+			usernames += s + ",";
+			map = jdbc_server_client_Util.getStats(s);
+			wins += map.get("wins") + ",";
+			losses += map.get("losses") + ",";
+		}
+		usernames = usernames.substring(0, usernames.length()-1);
+		wins = wins.substring(0, wins.length()-1);
+		losses = losses.substring(0, losses.length()-1);
+		Message stats = new Message();
+		stats.setMessageType(MessageType.WINSLOSSES);
+		stats.putData("usernames", usernames);
+		stats.putData("wins", wins);
+		stats.putData("losses", losses);
+		hst.sendMessage(stats);
+
+		Message kill = new Message();
+		kill.setMessageType(MessageType.KILL);
+		kill.putData("message", "Thank you for playing Hangman!");
+		hst.sendMessage(kill);
+	}
+
+	void broadcastOtherUserDisconnect(HangmanServerThread hst) {
+		GameRoom g = GlobalServerThreads.findGameRoom(hst);
+		Message lose = new Message();
+		lose.setMessageType(MessageType.SERVEROTHERRESPONSE);
+		lose.putData("message", hst.username + " fucked it up! Be gone!");
 		hst.sendMessage(lose);
 	}
 

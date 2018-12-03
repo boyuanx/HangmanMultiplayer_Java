@@ -94,6 +94,14 @@ public class GlobalServerThreads {
         gameRooms.add(g);
     }
 
+    static String getSecretWordFromRoom(HangmanServerThread hst) {
+        return findGameRoom(hst).secretWord;
+    }
+
+    static String getSecretWordMutableFromRoom(HangmanServerThread hst) {
+        return findGameRoom(hst).secretWordMutable;
+    }
+
     static boolean checkIfLetterInWordForRoom(String s, HangmanServerThread hst) {
         GameRoom g = findGameRoom(hst);
         gameRooms.remove(g);
