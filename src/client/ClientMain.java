@@ -2,9 +2,7 @@ package client;
 
 import util.configReader;
 
-import java.io.EOFException;
 import java.util.Map;
-import java.util.Scanner;
 
 public class ClientMain {
 

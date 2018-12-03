@@ -6,7 +6,6 @@ import message.MessageType;
 import util.AlreadyLoggedInException;
 import util.TimestampUtil;
 
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Vector;
 

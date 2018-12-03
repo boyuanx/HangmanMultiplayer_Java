@@ -3,7 +3,6 @@ package util;
 import client.GlobalSocket;
 import message.Message;
 import message.MessageType;
-import server.GlobalServerThreads;
 
 import java.io.IOException;
 import java.sql.*;

@@ -14,10 +14,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
-import java.sql.Time;
-import java.util.ArrayList;
 import java.util.Map;
-import java.util.Vector;
 
 public class HangmanServerThread extends Thread {
 
